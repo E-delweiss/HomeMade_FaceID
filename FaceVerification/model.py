@@ -1,9 +1,11 @@
+from configparser import ConfigParser
+
 import torch
 import torch.nn as nn
 import torchvision
 
 class SiameseNet(nn.Module):
-    def __init__(self):
+    def __init__(self, pretrained=False):
         """Custom the FaceNet InceptionResnetV1 model.
         """
         super(SiameseNet, self).__init__()
@@ -30,3 +32,24 @@ class SiameseNet(nn.Module):
         x = self.FaceNetModif_seq1(x)
         x = self.FaceNetModif_seq2(x)
         return x
+
+
+def siameseNet(load_weights=False, pretrained=True, **kwargs) -> SiameseNet:
+    assert load_weights != pretrained, "Can't load both"
+    
+    config = ConfigParser()
+    config.read("config.ini")
+
+    weights = config.get("WEIGHTS", "weights")
+
+    model = SiameseNet(**kwargs)
+    if load_weights:
+        model.load_state_dict(torch.load(weights))
+    
+    return model
+    
+
+if __name__ == "__main__":
+    model = siameseNet(???)
+    summary(model, (16, 3, 448, 448))
+    

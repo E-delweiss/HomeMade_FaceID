@@ -1,7 +1,6 @@
 import torch
-from torch.nn import Module
 
-class BatchAllTripletLoss(nn.Module):
+class BatchAllTripletLoss(torch.nn.Module):
     def __init__(self, margin:float, device:torch.device):
         """Compute the Batch All triplet loss method.        
         """
