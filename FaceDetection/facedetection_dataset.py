@@ -1,28 +1,23 @@
 import os, sys
 import glob
 import pandas as pd
+import random as rd
 
 import numpy as np
 
+import PIL
 import torch
 import torchvision
 
 
-class FaceDetectionDataset(Dataset):
-    def __init__(self, imgset_face:list, imgset_noface:list, split:str, isValSet_bool:bool=False, 
-                 isAugment_bool:bool=False, isNormalize_bool:bool=True):
+class FaceDetectionDataset(torch.utils.data.Dataset):
+    def __init__(self, isValSet_bool:bool=False, isAugment_bool:bool=False, isNormalize_bool:bool=True):
         """
         Class that build the dataset to feed the Pytorch Dataloader 
 
         -------------------
         Class attributs:
-            imgset_face: list of PIL images
-                The list of PIL images with face in it
-            imgset_face: list of PIL images.
-                The list of PIL images without face in it (typically random
-                background found in the 'houseroom dataset').
-            split: str
-                Used to select training set or validation set
+            TODO
             isValSet_bool: bool
                 Boolean to construct a validation dataset
             isAugment_bool: bool
@@ -31,29 +26,25 @@ class FaceDetectionDataset(Dataset):
                 Boolean to activate normalization of each channel by mean and 
                 std ResNet paper values.
         """
-        
+        imgset_face_path = rd.sample(glob.glob('../dataset/lfw/lfw_funneled/*/*'), 3000)
+        imgset_background_path = rd.sample(glob.glob('../dataset/House_Room/*/*'), 3000)
+
         self.isAugment_bool = isAugment_bool
         self.isNormalize_bool = isNormalize_bool
 
-        split_pct = float(split.strip('%'))/100
-        len_imageset_face = round(len(imgset_face) * split_pct)
-        len_imageset_noface = round(len(imgset_noface) * split_pct)
-
-        
-
-        if isValSet_bool == False:
-            imgset_face = imgset_face[:len_imageset_face] 
-            imgset_noface = imgset_noface[:len_imageset_noface]
+        if isValSet_bool:
+            imgset_face_path = rd.sample(imgset_face_path, int(3000*0.3)) 
+            imgset_background_path = rd.sample(imgset_background_path, int(3000*0.3))
         else :
-            imgset_face = imgset_face[-len_imageset_face:]
-            imgset_noface = imgset_noface[-len_imageset_noface:]
+            imgset_face_path = rd.sample(imgset_face_path, int(3000*0.7)) 
+            imgset_background_path = rd.sample(imgset_background_path, int(3000*0.7))
         
-        self.imgset = imgset_face + imgset_noface
+        self.imgset = imgset_face_path + imgset_background_path
 
-        label_face = np.ones(len(imgset_face)).tolist()
-        label_noface = np.zeros(len(imgset_noface)).tolist()
-        self.labelset = label_face + label_noface
-        
+        label_face = np.ones(len(imgset_face_path)).tolist()
+        label_background = np.zeros(len(imgset_background_path)).tolist()
+        self.labelset = label_face + label_background
+
 
     def preprocess(self, img)->torch.Tensor:
         transform = torchvision.transforms.Compose([
@@ -83,7 +74,8 @@ class FaceDetectionDataset(Dataset):
             idx = idx.tolist()
 
         image = self.imgset[idx]
-        image_t = self.preprocess(image)
+        image_PIL = PIL.Image.open(image).convert('RGB')
+        image_t = self.preprocess(image_PIL)
         
         label = self.labelset[idx]
             
@@ -91,20 +83,26 @@ class FaceDetectionDataset(Dataset):
 
 
 
-def get_training_dataset(BATCH_SIZE=16, **kwargs):
+def get_training_dataset(BATCH_SIZE=16):
     """
     Loads and maps the training split of the dataset using the custom dataset class. 
     """
-    dataset = FaceDetectionDataset(root="???", **kwargs)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, val_stride=???, isValSet_bool=False, isAugment=True, isNormalize=True)
+    dataset = FaceDetectionDataset(isValSet_bool=False, isAugment_bool=True, isNormalize_bool=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     return dataloader
 
-def get_validation_dataset(BATCH_SIZE=None, **kwargs):
+def get_validation_dataset(BATCH_SIZE=None):
     """
     Loads and maps the validation split of the datasetusing the custom dataset class. 
     """
-    dataset = FaceDetectionDataset(root="???", **kwargs)
+    dataset = FaceDetectionDataset(isValSet_bool=True, isAugment_bool=False, isNormalize_bool=True)
     if BATCH_SIZE is None:
         BATCH_SIZE = len(dataset)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, val_stride=???, isValSet_bool=True, isAugment=False, isNormalize=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     return dataloader
+
+
+if __name__ == "__main__":
+    dataset = get_validation_dataset(16)
+    # print(next(iter(dataset)))
+    

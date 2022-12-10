@@ -1,30 +1,35 @@
 from configparser import ConfigParser
 
 import torch
-import torch.nn as nn
 import torchvision
+from torchinfo import summary
 
-class ResNet50_custom(torch.nn.Module):
-    def __init__(self):
-        super(resNet50_custom, self).__init__()
-        self.res50 = torchvision.models.resnet50(pretrained = True, progress = True)
-        for param in self.res50.parameters():
+class ResNet18_custom(torch.nn.Module):
+    def __init__(self, pretrained):
+        super(ResNet18_custom, self).__init__()
+        ### Load ResNet model
+        self.res18 = torchvision.models.resnet18(pretrained = pretrained)
+
+        ## Freeze backbone
+        for param in self.res18.parameters():
             param.requires_grad = False
-        self.res50.fc = torch.nn.Linear(2048, 1)
 
-    def forward(self, input):
-        output = self.res50(input)
+        ## Head part
+        self.res18.fc = torch.nn.Linear(512, 1)
+
+    def forward(self, x):
+        output = self.res18(x)
         return torch.sigmoid(output)
 
 
 
-def resNet50_custom(load_weights=False, pretrained=True, **kwargs) -> ResNet50_custom:  
+def resNet18_custom(load_weights=False, **kwargs) -> ResNet18_custom:  
     config = ConfigParser()
     config.read("config.ini")
 
     weights = config.get("WEIGHTS", "weights")
 
-    model = ResNet50_custom(**kwargs)
+    model = ResNet18_custom(**kwargs)
     if load_weights:
         model.load_state_dict(torch.load(weights))
     
@@ -32,6 +37,6 @@ def resNet50_custom(load_weights=False, pretrained=True, **kwargs) -> ResNet50_c
     
 
 if __name__ == "__main__":
-    model = resNet50_custom(???)
-    summary(model, (16, 3, 448, 448))
+    model = ResNet18_custom(pretrained=True)
+    summary(model, (16, 3, 224, 224))
     

@@ -11,8 +11,9 @@ current_folder = os.path.dirname(locals().get("__file__"))
 parent_folder = Path(current_folder).parent
 sys.path.append(str(parent_folder))
 
-from dataset import face_dataset
+from facedetection_dataset import get_training_dataset, get_validation_dataset
 
+#TODO
 class TestFaceDataset(unittest.TestCase):
     def __init__(self, TestFaceDataset) -> None:
         super().__init__(TestFaceDataset)
