@@ -9,7 +9,6 @@ import PIL
 import torch
 import torchvision
 
-
 def create_logging(prefix:str):
     """
     Create logging file.
@@ -57,8 +56,9 @@ def set_device(device, verbose=0)->torch.device:
         logging.warning(f"Device {device} not available.")
 
     if device == 'mps' and torch.has_mps:
-        logging.warning(f"Device {device} currently not working well with PyTorch.")
-        device = torch.device('cpu')
+        # logging.warning(f"Device {device} currently not working well with PyTorch.")
+        # device = torch.device('cpu')
+        device = torch.device('mps')
 
     logging.info("Execute on {}".format(device))
     if verbose:
@@ -67,34 +67,6 @@ def set_device(device, verbose=0)->torch.device:
         print("------------------------------------\n")
 
     return device
-
-
-
-def update_lr(current_epoch:int, optimizer:torch.optim, do_scheduler:bool):
-    """
-    Schedule the learning rate
-
-    Args:
-        current_epoch (int)
-            Current training loop epoch.
-        optimizer (torch.optim)
-            Gradient descent optimizer.
-        do_scheduler (bool)
-            TODO
-    """
-    # k = 0.1
-    # optimizer.defaults['lr'] = k/np.sqrt(current_epoch+1) * lr0
-    # logging.info(f"Learning rate : lr {optimizer.defaults['lr']}")
-
-    if do_scheduler:
-        if current_epoch < 30:
-            lr = [0.0001 + x * (0.001 - 0.0001)/30 for x in range(30)]
-            optimizer.defaults['lr'] = lr[current_epoch]
-        if current_epoch >= 80:
-            optimizer.defaults['lr'] = optimizer.defaults['lr']/2
-        # if current_epoch % 20 == 0 and current_epoch != 0:
-        #     optimizer.defaults['lr'] = optimizer.defaults['lr']/2
-        logging.info(f"Learning rate : lr {optimizer.defaults['lr']}")
 
 
 def defineRanger(pt_file:str, num_epoch:int)->range:
@@ -172,38 +144,12 @@ def save_losses(train_loss:dict, val_loss:dict, model_name:str, save:bool):
     return
 
 
-def mean_std_normalization()->tuple:
+def tqdm_fct(training_dataset):
     """
-    Get the mean and std of the dataset RGB channels.
-    Note:
-        mean/std of the whole dataset :
-            mean=(), std=()
-        mean/std of the dataset labellised only (12/10/22) :
-            mean=(), std=()
-
-    Returns:
-        mean : torch.Tensor
-        std : torch.Tensor
-
-        TODO
+    Set a tqdm progress bar.
     """
-    data_jpg = glob.glob('???')
-    data_PIL = [PIL.Image.open(img_path).convert('RGB') for img_path in data_jpg]
-    data_tensor = [torchvision.transforms.ToTensor()(img_PIL) for img_PIL in data_PIL]
-
-    channels_sum, channels_squared_sum = 0, 0
-    for img in data_tensor:
-        channels_sum += torch.mean(img, dim=[1,2])
-        channels_squared_sum += torch.mean(img**2, dim=[1,2])
-    
-    mean = channels_sum/len(data_tensor)
-    std = torch.sqrt((channels_squared_sum/len(data_tensor) - mean**2))
-    
-    return mean, std
-
-
-
-if __name__ == "__main__":
-    mean, std = mean_std_normalization()
-    print(mean)
-    print(std)
+    return tqdm(enumerate(training_dataset),
+                total=len(training_dataset),
+                initial=1,
+                desc="Training : image",
+                ncols=100)

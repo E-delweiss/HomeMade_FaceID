@@ -1,9 +1,10 @@
 import torch
+from icecream import ic
+
 
 class BatchAllTripletLoss(torch.nn.Module):
     def __init__(self, margin:float, device:torch.device):
-        """Compute the Batch All triplet loss method.        
-        """
+        """Compute the Batch All triplet loss method."""
         super(BatchAllTripletLoss, self).__init__()        
         self.margin = margin
         self.device = device
@@ -55,9 +56,9 @@ class BatchAllTripletLoss(torch.nn.Module):
         mask = torch.logical_and(distinct_indices, valid_labels)
         return mask
 
-    def forward(self, labels:torch.Tensor, embeddings:torch.Tensor):
+    def forward(self, pred_embeddings:torch.Tensor, target_labels:torch.Tensor):
         """Forward method of the class. Build the triplet loss over a batch of 
-        embeddings. All the valid triplets are generate and average the loss 
+        embeddings. All the valid triplets are generated and the loss is averaged 
         over the positive ones.
 
         -------------------
@@ -74,7 +75,7 @@ class BatchAllTripletLoss(torch.nn.Module):
                 Contains the ratio of positive triplets in the batch
         """
         # Get the pairwise distance matrix
-        pairwise_dist = self._pairwise_distances(embeddings)
+        pairwise_dist = self._pairwise_distances(pred_embeddings)
 
         # shape (batch_size, batch_size, 1)
         anchor_positive_dist = pairwise_dist.unsqueeze(2)
@@ -88,7 +89,7 @@ class BatchAllTripletLoss(torch.nn.Module):
 
         # Put to zero the invalid triplets
         # (where label(a) != label(p) or label(n) == label(a) or a == p)
-        mask = self._get_triplet_mask(labels).to(torch.float)
+        mask = self._get_triplet_mask(target_labels).to(torch.float)
         triplet_loss = torch.multiply(mask, triplet_loss)
 
         # Remove negative losses (i.e. the easy triplets)
@@ -103,4 +104,6 @@ class BatchAllTripletLoss(torch.nn.Module):
         # Get final mean triplet loss over the positive valid triplets
         triplet_loss = torch.sum(triplet_loss) / (num_positive_triplets + 1e-16)
 
+        print("\n")
+        ic("End loss.")
         return triplet_loss, fraction_positive_triplets

@@ -1,9 +1,10 @@
 import torch
+from icecream import ic
 
-def validation_loop(model, validation_dataset, device=torch.device("cpu"), ONE_BATCH=False):
+def validation_loop(model, validation_dataset, device, ONE_BATCH=False):
     """
     Execute validation loop
-
+    TODO
     Args:
         model (nn.Module)
             Yolo model.
@@ -14,11 +15,11 @@ def validation_loop(model, validation_dataset, device=torch.device("cpu"), ONE_B
         ONE_BATCH (bool, optional)
             For debugging or testing, permits to load only one batch. Default to False.
 
-    Returns:
-        TODO
+    Returns: 
     """
     print("|")
     print("| Validation...")
+    model.eval()
     for (img, target) in validation_dataset:
         img, target = img.to(device), target.to(device)
         
@@ -28,8 +29,8 @@ def validation_loop(model, validation_dataset, device=torch.device("cpu"), ONE_B
             
             if ONE_BATCH is True:
                 break
-
-    return #TODO
+            
+    return img, target, prediction
 
 
 
