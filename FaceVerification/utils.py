@@ -26,7 +26,7 @@ def create_logging(prefix:str):
 
     tm = datetime.now()
     tm = tm.strftime("%d%m%Y_%Hh%M")
-    logging_name = 'logging_'+prefix+'_'+tm+'.log'
+    logging_name = 'logs/logging_'+prefix+'_'+tm+'.log'
 
     logging.basicConfig(
         level=logging.INFO,
@@ -153,3 +153,47 @@ def tqdm_fct(training_dataset):
                 initial=1,
                 desc="Training : image",
                 ncols=100)
+
+
+
+def mean_std_normalization()->tuple:
+    """
+    Get the mean and std of the dataset RGB channels.
+    Note:
+        mean/std of the whole dataset :
+            mean=(0.4236, 0.3698, 0.3317), std=(0.2988, 0.2733, 0.2654)
+
+    Returns:
+        mean : torch.Tensor
+        std : torch.Tensor
+    """
+    imgset_self = glob.glob('../dataset/dataset_moi_mbp_cropped/*')
+    imgset_lfw = glob.glob('../dataset/lfw/lfw_funneled/*/*')
+    data_jpg = imgset_self + imgset_lfw
+    data_PIL = [PIL.Image.open(img_path).convert('RGB') for img_path in data_jpg]
+    data_tensor = [torchvision.transforms.ToTensor()(img_PIL) for img_PIL in data_PIL]
+
+    channels_sum, channels_squared_sum = 0, 0
+    for img in data_tensor:
+        channels_sum += torch.mean(img, dim=[1,2])
+        channels_squared_sum += torch.mean(img**2, dim=[1,2])
+    
+    mean = channels_sum/len(data_tensor)
+    std = torch.sqrt((channels_squared_sum/len(data_tensor) - mean**2))
+    
+    return mean, std
+
+def unormalization(img_tensor:torch.Tensor):
+    inv_normalize = torchvision.transforms.Normalize(
+        mean=[-0.4236/0.2988, -0.4055/0.2733, -0.3317/0.2654],
+        std=[1/0.2988, 1/0.2733, 1/0.2654]
+        )
+    img_idx = inv_normalize(img_tensor) * 255.0
+    img_idx = img_tensor.to(torch.uint8)
+    return img_idx
+
+
+if __name__ == "__main__":
+    mean, std = mean_std_normalization()
+    print(mean)
+    print(std)

@@ -45,6 +45,8 @@ def siameseNet(load_weights=False, **kwargs) -> SiameseNet:
     model = SiameseNet(**kwargs)
     if load_weights:
         model.load_state_dict(torch.load(weights))
+        print("Load {}".format(weights))
+
     
     return model
     
