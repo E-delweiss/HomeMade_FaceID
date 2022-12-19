@@ -4,5 +4,6 @@
 *.pyc
 *.ipynb
 /dataset/*
+/**/runs
 *.pt
-
+/**/logs
