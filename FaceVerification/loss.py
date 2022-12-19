@@ -20,7 +20,7 @@ class BatchAllTripletLoss(torch.nn.Module):
             imgs_crop: torch.Tensor of shape (batch_size, batch_size)
         """
         embeddings = embeddings.to(torch.float)
-        distances = torch.cdist(embeddings, embeddings, p=2)
+        distances = torch.cdist(embeddings.to('cpu'), embeddings.to('cpu'), p=2).to(self.device)
         return distances
 
     def _get_triplet_mask(self, labels:torch.Tensor)->torch.Tensor:
@@ -104,6 +104,4 @@ class BatchAllTripletLoss(torch.nn.Module):
         # Get final mean triplet loss over the positive valid triplets
         triplet_loss = torch.sum(triplet_loss) / (num_positive_triplets + 1e-16)
 
-        print("\n")
-        ic("End loss.")
         return triplet_loss, fraction_positive_triplets
