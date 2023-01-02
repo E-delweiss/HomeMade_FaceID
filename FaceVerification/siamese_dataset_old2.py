@@ -24,20 +24,22 @@ class SiameseDataset(torch.utils.data.Dataset):
         self.ratio = ratio
 
         if isValSet_bool:
-            self.imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.3)) 
+            # self.imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.3)) 
+            self.imgset_lfw = rd.sample(imgset_lfw, int(len_self*0.3)) 
             self.imgset_self = rd.sample(imgset_self, int(len_self*0.3))
         else :
-            self.imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.7)) 
+            # self.imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.7)) 
+            self.imgset_lfw = rd.sample(imgset_lfw, int(len_self*0.7)) 
             self.imgset_self = rd.sample(imgset_self, int(len_self*0.7))
 
         self.label_lfw = np.zeros(len(self.imgset_lfw)).tolist()
         self.label_self = np.ones(len(self.imgset_self)).tolist()
         
         self.labelset = self.label_lfw + self.label_self
-        self.imgset = self.imgset_lfw + self.imgset_self
-        # combined = list(zip(self.imgset_lfw + self.imgset_self, self.label_lfw + self.label_self))
-        # rd.shuffle(combined)
-        # self.imgset, self.labelset = zip(*combined)
+        # self.imgset = self.imgset_lfw + self.imgset_self
+
+        self.imgset_pos = self.imgset_self
+        self.imgset_neg = self.imgset_lfw
 
     def _preprocess(self, img_PIL:torch.Tensor)->torch.Tensor:
         ### Resizing
@@ -64,7 +66,7 @@ class SiameseDataset(torch.utils.data.Dataset):
         return img_t
 
     def __len__(self):
-        return len(self.imgset)
+        return len(self.imgset_self)
     
     def __getitem__(self, idx)->tuple:
         if torch.is_tensor(idx):
@@ -83,15 +85,25 @@ class SiameseDataset(torch.utils.data.Dataset):
                 img_path = self.imgset_self[pos_idx]
                 label = self.label_self[pos_idx]
         else:
-            img_path = self.imgset[idx]
-            label = self.labelset[idx]
+            img_path_pos = self.imgset_pos[idx]
+            img_path_neg = self.imgset_neg[idx]
+            # label = self.labelset[idx]
 
         # img_path = self.imgset[idx]
-        img_PIL = PIL.Image.open(img_path).convert('RGB')
-        image = self._preprocess(img_PIL)
+        img_PIL_pos = PIL.Image.open(img_path_pos).convert('RGB')
+        img_PIL_neg = PIL.Image.open(img_path_neg).convert('RGB')
+
+        image_pos = self._preprocess(img_PIL_pos)
+        image_neg = self._preprocess(img_PIL_neg)
+
+
+        mean, std = (0.4236, 0.3698, 0.3317), (0.2988, 0.2733, 0.2654)
+        image_anch = torchvision.transforms.ToTensor()(PIL.Image.open("../dataset/frame_base_cropped.jpeg").convert("RGB").resize((160,160)))
+        image_anch = torchvision.transforms.Normalize(mean, std)(image_anch)
 
         # label = self.labelset[idx]
-        return image, torch.tensor(label, dtype=torch.int32)
+        # return image, torch.tensor(label, dtype=torch.int32)
+        return image_anch, image_pos, image_neg
 
 
 def get_training_dataset(BATCH_SIZE=16, **kwargs):
@@ -114,5 +126,5 @@ def get_validation_dataset(BATCH_SIZE=None, **kwargs):
 
 
 if __name__ == "__main__":
-    dataset = get_training_dataset(ratio=1, isAugment_bool=True, isNormalize_bool=False)
-    print(next(iter(dataset))[1])
+    dataset = get_training_dataset(16, isValSet_bool=False, isAugment_bool=True, isNormalize_bool=False)
+    print(next(iter(dataset)))

@@ -8,10 +8,14 @@ from torch.utils.tensorboard import SummaryWriter
 import torch
 
 import utils
-from siamese_dataset import get_training_dataset, get_validation_dataset
+# from siamese_dataset import get_training_dataset, get_validation_dataset
+# from siamese_dataset_MNIST import get_training_dataset, get_validation_dataset
+from siamese_dataset_2faces import get_training_dataset, get_validation_dataset
 from model import siameseNet
 from metrics import classAcc
 from loss import BatchAllTripletLoss
+# from loss_OnlineTripleLoss import OnlineTripleLoss
+# from loss_OnlineMiningAll import online_mine_all
 from validation import validation_loop
 
 
@@ -57,9 +61,13 @@ FREQ = config.getint('PRINTING', 'freq')
 device = utils.set_device(DEVICE, verbose=0)
 
 model = siameseNet(load_weights=LOAD_CHECKPOINT)
+# model = siameseNet(input_shape=(3,100,100), load_weights=LOAD_CHECKPOINT)
+# model = siameseNet(input_shape=(1,28,28), load_weights=LOAD_CHECKPOINT)
 model = model.to(device)
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate, weight_decay=WEIGHT_DECAY)
+# criterion = OnlineTripleLoss(margin=MARGIN)
 criterion = BatchAllTripletLoss(margin=MARGIN, device=device)
+# criterion = torch.nn.TripletMarginLoss(margin=0.2, p=2)
 
 training_dataloader = get_training_dataset(BATCH_SIZE, ratio=RATIO, isNormalize_bool=isNormalize_trainset, isAugment_bool=isAugment_trainset)
 validation_dataloader = get_validation_dataset(VAL_BATCH_SIZE, ratio=1, isNormalize_bool=isNormalize_valset, isAugment_bool=isAugment_valset)
@@ -80,6 +88,8 @@ start_time = datetime.datetime.now()
 
 print(f"[Training on] : {str(device).upper()}")
 print(f"Learning rate : {optimizer.defaults['lr']}")
+
+torch.autograd.set_detect_anomaly(True)
 
 utils.create_logging(prefix=PREFIX)
 logging.info(f"Pretrained is {PRETRAINED}")
@@ -106,17 +116,26 @@ for epoch in ranger:
     ################################################################################
     
     for batch, (img, target) in utils.tqdm_fct(training_dataloader):    
+    # for batch, (img_anch, img_pos, img_neg) in utils.tqdm_fct(training_dataloader):    
         model.train()
         img, target = img.to(device), target.to(device)
+        # print("\n")
+        # print(target)
+        # img_anch, img_pos, img_neg = img_anch.to(device), img_pos.to(device), img_neg.to(device)
         
         ### clear gradients
         optimizer.zero_grad()
         
         ### prediction
         pred_embeddings = model(img)
+        # anch_embeddings = model(img_anch)
+        # pos_embeddings = model(img_pos)
+        # neg_embeddings = model(img_neg)
 
         ### compute binary loss
+        # loss, num_positive_triplets, num_valid_triplets = online_mine_all(target, pred_embeddings, MARGIN, squared=True, device=device)
         loss, fraction_positive_triplets = criterion(pred_embeddings, target)
+        # loss = criterion(anch_embeddings, pos_embeddings, neg_embeddings)
         writer.add_scalar("Loss/train", loss, (epoch+1)*batch)
     
         ### compute gradients
@@ -150,14 +169,19 @@ for epoch in ranger:
             if batch == 0 or (batch+1)%FREQ == 0 or batch == len(training_dataloader.dataset)//BATCH_SIZE:
                 logging.info(f"Epoch {epoch+1}/{EPOCHS}")
                 logging.info(f"Fraction positive triplet in this batch : {fraction_positive_triplets*100:.2f}")
+                # logging.info(f"Number of positive triplets in this batch : {num_positive_triplets}/{len(target)}")
+                # logging.info(f"Number of valid triplets in this batch : {num_valid_triplets}/{len(target)}")
                 logging.info(f"***** Training loss : {current_loss:.5f}")
                 logging.info(f"***** Validation accuracy : {acc*100:.2f}%")
             
-            if batch == len(training_dataloader.dataset)//BATCH_SIZE:
+            if batch == len(training_dataloader.dataset)//BATCH_SIZE or batch*BATCH_SIZE >= 400:
                 logging.info(f"Mean training loss for this epoch : {epochs_loss / len(training_dataloader):.5f}")
                 print(f"\nMean training loss for this epoch : {epochs_loss / len(training_dataloader):.5f}")
                 logging.info("")
                 print("\n\n")
+
+            # if batch*BATCH_SIZE >= 4000:
+                # break
 ################################################################################
 ### Saving results
 pickle_val_results = {
