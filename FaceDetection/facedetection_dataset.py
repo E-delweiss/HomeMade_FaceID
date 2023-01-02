@@ -100,9 +100,4 @@ def get_validation_dataset(BATCH_SIZE=None):
         BATCH_SIZE = len(dataset)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     return dataloader
-
-
-if __name__ == "__main__":
-    dataset = get_validation_dataset(16)
-    # print(next(iter(dataset)))
     
