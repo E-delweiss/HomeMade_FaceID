@@ -13,9 +13,9 @@ sys.path.append(str(parent_folder))
 
 from MNIST_dataset import get_training_dataset, get_validation_dataset
 
-class TestFaceDataset(unittest.TestCase):
-    def __init__(self, TestFaceDataset) -> None:
-        super().__init__(TestFaceDataset)
+class TestMNISTDataset(unittest.TestCase):
+    def __init__(self, TestMNISTDataset) -> None:
+        super().__init__(TestMNISTDataset)
         self.SIZE = 28
         self.BATCH_SIZE = 64
         
