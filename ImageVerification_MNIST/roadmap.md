@@ -13,7 +13,7 @@ The MNIST dataset from `torchvision` is used. Each image is turned into `torch.T
 To treat the *unbalanced* case, the **7 digit** has been chosen so, when the dataloader calls the dataset class, an image of a 7 has the label 7 but the label of any other image will be 0.
 
 # Model
-This task is not really complicated for a network. Here I used a simple network called TNN and find in (this repo)[https://github.com/KinWaiCheuk/pytorch-triplet-loss/blob/master/TNN/Model.py] from @KinWaiCheuk.
+This task is not really complicated for a network. Here I used a simple network called TNN and find in [this repo](https://github.com/KinWaiCheuk/pytorch-triplet-loss/blob/master/TNN/Model.py) from @KinWaiCheuk.
 
 # Compilation
 * Loss: custom loss `BatchAllTripletLoss` with the *online mining all* technique (see the [main project roadmap '#TODO']())
