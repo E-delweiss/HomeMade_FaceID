@@ -18,7 +18,7 @@ In the [MNIST project](https://github.com/E-delweiss/HomeMade_FaceID/tree/main/I
 
 # Creating a custom loss function
 ## Triplet mining & Batch-All Triplet Loss
-The method used to compute the loss is \Batch-All triplets\. I reuse a triplet mining method from the incredibly clever work of [Olivier Moindrot](https://https://omoindrot.github.io/triplet-loss) (see how he uses broadcasting) and basically rewrite it into a `nn.Module` PyTorch.
+The method used to compute the loss is "Batch-All triplets". I reuse a triplet mining method from the incredibly clever work of [Olivier Moindrot](https://https://omoindrot.github.io/triplet-loss) (see how he uses broadcasting) and basically rewrite it into a `nn.Module` PyTorch.
 
 As explained earlier, the dataset is composed of positive and negative images so, a *triplet* will be composed of an *anchor image*, a *positive* and a *negative* one. This will be used to compute the so called *Triplet Loss* :
 
@@ -30,7 +30,7 @@ With :
 *   $\\lVert{.}\\rVert$ L2 norm
 *   $\\alpha$ a margin
 
-When minimizing this loss, $\\lVert{AP}\\rVert$ is pushed towards 0 and $\\lVert{AN}\\rVert$ grows to be greater than $\\lVert{AP}\\rVert+\\alpha$. When $N$ is an \easy negative\ (i.e. obvious wrong face), the loss is zero.
+When minimizing this loss, $\\lVert{AP}\\rVert$ is pushed towards 0 and $\\lVert{AN}\\rVert$ grows to be greater than $\\lVert{AP}\\rVert+\\alpha$. When $N$ is an "easy negative" (i.e. obvious wrong face), the loss is zero.
 
 From [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/abs/1703.07737), [Olivier Moindrot](https://omoindrot.github.io/triplet-loss) explains the following about triplet mining :
 
@@ -45,13 +45,13 @@ From [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv
 
 > *Each of these definitions depend on where the negative is, relatively to the anchor and positive. We can therefore extend these three categories to the negatives : __hard negatives__, __semi-hard negatives__ or __easy negatives__.*
 
-The \Batch-All Triplet\ method will find all valid triplets in a batch : regarding all the positives, we select an anchor and construct a *valid* triplet (i,j,k) such as;
+The "Batch-All Triplet" method will find all valid triplets in a batch : regarding all the positives, we select an anchor and construct a *valid* triplet (i,j,k) such as;
 * i, j and k must be distinct
 * label[i] equals label[j] (find a positive)
 * labels[i] differents from label[k] (find a negative)
 
 Then, *only those valid triplets* will feed the model.
 
-An other method of mining is the \Batch Hard\ : for each anchor, we select the hardest positive (biggest distance A-P) and the hardest negative among the batch. 
+An other method of mining is the "Batch Hard": for each anchor, we select the hardest positive (biggest distance A-P) and the hardest negative among the batch. 
 
 According to the [paper](https://arxiv.org/abs/1703.07737), the batch hard strategy yields to the best performance. However it really depends on the dataset and a Batch-All method is chosen here for simplicity.
