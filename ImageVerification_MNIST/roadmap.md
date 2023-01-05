@@ -5,7 +5,7 @@ Two aspects of this project are depicted:
 * First, train a model that takes each digit apart **from each other**
 * Second, be able to deal with an unbalanced dataset where the model should be able to take apart **an only digit from all the other**.
 
-Note: all the concepts won't be explain in detail here but in the [main project '#TODO']().
+Note: all the concepts won't be explain in detail here but in the [main project '#TBM'](https://github.com/E-delweiss/HomeMade_FaceID/blob/main/FaceVerification/roadmap.md).
 
 # Dataset
 The MNIST dataset from `torchvision` is used. Each image is turned into `torch.Tensor` and normalize with `(mean, std) = (0.1307, 0.3081)`. No data augmentation has been used.
@@ -16,7 +16,7 @@ To treat the *unbalanced* case, the **7 digit** has been chosen so, when the dat
 This task is not really complicated for a network. Here I used a simple network called TNN and find in [this repo](https://github.com/KinWaiCheuk/pytorch-triplet-loss/blob/master/TNN/Model.py) from @KinWaiCheuk.
 
 # Compilation
-* Loss: custom loss `BatchAllTripletLoss` with the *online mining all* technique (see the [main project roadmap '#TODO']())
+* Loss: custom loss `BatchAllTripletLoss` with the *online mining all* technique (see the [main project roadmap #TBM'](https://github.com/E-delweiss/HomeMade_FaceID/blob/main/FaceVerification/roadmap.md))
 * Optimizer: `torch.optim.Adam` with `lr=0.0001` and `weight_decay=0.0005`
 
 # Results
