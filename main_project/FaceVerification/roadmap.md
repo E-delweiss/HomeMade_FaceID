@@ -14,6 +14,13 @@ Technically, the model will encode the image as an embedding vector of d-dimensi
 
 In the [MNIST project](https://github.com/E-delweiss/HomeMade_FaceID/tree/main/imageVerification_MNIST), I show how to do an image classification with 10 classes (where all different digits embedding are far from each other) and with only 2 classes (where all non-7 digit embeddings are far from the 7 embedding digits).
 
+
+
+<p align="center">
+  <img src="imgs/model_structure.png?raw=true" alt="model_structure" width="300"/>
+  <img src="imgs/triplet_loss.png?raw=true" alt="triplet_loss" width="300"/>
+</p>
+
 # Todo...
 
 # Creating a custom loss function
