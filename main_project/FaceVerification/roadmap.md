@@ -8,7 +8,7 @@ Here, we are trying to unlock a computer with the administrator face. Since no o
 # What should the model do ?
 The model should authorized one specific person and rejects all different. To achive this, we'll use the technique of **one shot learning with Siamese Networks** which is a well know technique for face verification.
 
-One Shot Learning is the idea in which classification or categorization tasks can be achieved with one or few examples to classify many new examples. Back to our problem, an image of the administrator will be given to the model (it's the *anchor*) and the model should be capable to classify any image regarding this anchor (this is the same person or it is not).
+One Shot Learning is the idea in which classification or categorization tasks can be achieved with one or few examples to classify many new examples. Back to our problem, an image of the administrator will be given to the model (it's the *anchor*) and the model should be capable to classify any image regarding this anchor (this is the same person or it is not i.e. this is a *positive* image or a *negative* one.).
 
 Technically, the model will encode the image as an embedding vector of d-dimension (e.g. 128). That is, any embedding image will be place in a n-dimensional Euclidean space and will belong to a specific location such that (luckily) similar identities should be close to each others, and different identities will be found far apart.
 
@@ -17,11 +17,26 @@ In the [MNIST project](https://github.com/E-delweiss/HomeMade_FaceID/tree/main/i
 
 
 <p align="center">
-  <img src="imgs/model_structure.png?raw=true" alt="model_structure" width="300"/>
-  <img src="imgs/triplet_loss.png?raw=true" alt="triplet_loss" width="300"/>
+  <img src="imgs/model_structure.png?raw=true" alt="model_structure" width="400"/>
+  <img src="imgs/triplet_loss.png?raw=true" alt="triplet_loss" width="400"/>
 </p>
 
-# Todo...
+# Composition of the dataset
+TODO
+
+# Cropping faces
+TODO ?
+
+# Building the model
+I use a version of the FaceNet model described in this [paper](https://arxiv.org/abs/1503.03832). It's an Inception ResNet model, pretrained on VGGFace2 or CASIA-Webface. The Tim Esler's [implementation](https://github.com/timesler/facenet-pytorch) in PyTorch is used, where the model weights were initialized using parameters ported from David Sandberg's [work](https://github.com/davidsandberg/facenet).
+
+The model can be used for classification (face recognition) or not. In the later case, it outputs a *normalized embedding* of (512,1) dimension.
+
+For the purpuse of this work, several tries led me to modify the top layers of the model. In the litterature, outputting a (128,1) normalized vector seems to be a good start. So, I kept the whole `InceptionResnetV1` pretrained model, got rid of the last **batch norm** and **linear** layers and add [a **smooth** dimensional decrease with linear layers ???]  until a **(128,1) normalized output** vector.
+
+**Note** : in one-shot learning, it's a common way to compare L2-normalized embeddings.
+
+
 
 # Creating a custom loss function
 ## Triplet mining & Batch-All Triplet Loss
@@ -35,7 +50,7 @@ With :
 
 *   A, P, N respectively the anchor, positive and negative image embeddings
 *   $\\lVert{.}\\rVert$ L2 norm
-*   $\\alpha$ a margin
+*   $\\alpha$ margin
 
 When minimizing this loss, $\\lVert{AP}\\rVert$ is pushed towards 0 and $\\lVert{AN}\\rVert$ grows to be greater than $\\lVert{AP}\\rVert+\\alpha$. When $N$ is an "easy negative" (i.e. obvious wrong face), the loss is zero.
 
@@ -57,8 +72,10 @@ The "Batch-All Triplet" method will find all valid triplets in a batch : regardi
 * label[i] equals label[j] (find a positive)
 * labels[i] differents from label[k] (find a negative)
 
-Then, *only those valid triplets* will feed the model.
+**Only those valid triplets** will feed the model.
 
-An other method of mining is the "Batch Hard": for each anchor, we select the hardest positive (biggest distance A-P) and the hardest negative among the batch. 
+An other mining method is the "Batch Hard": for each anchor, we select the hardest positive (biggest distance A-P) and the hardest negative among the batch. 
 
-According to the [paper](https://arxiv.org/abs/1703.07737), the batch hard strategy yields to the best performance. However it really depends on the dataset and a Batch-All method is chosen here for simplicity.
+According to the [paper](https://arxiv.org/abs/1703.07737), the batch hard strategy yields to the best performance. However it really depends on the dataset.
+
+**The Batch-All method is chosen here for simplicity**.
