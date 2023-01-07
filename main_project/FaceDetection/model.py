@@ -34,9 +34,3 @@ def resNet18_custom(load_weights=False, **kwargs) -> ResNet18_custom:
         model.load_state_dict(torch.load(weights))
     
     return model
-    
-
-if __name__ == "__main__":
-    model = ResNet18_custom(pretrained=True)
-    summary(model, (16, 3, 224, 224))
-    

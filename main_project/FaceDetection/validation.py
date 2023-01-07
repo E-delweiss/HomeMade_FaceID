@@ -30,8 +30,6 @@ def validation_loop(model, validation_dataset, device, ONE_BATCH=False):
             if ONE_BATCH is True:
                 break
 
-    # ic(target)
-    # ic(prediction)
     return img, target, prediction
 
 
