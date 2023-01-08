@@ -36,7 +36,8 @@ def validation_loop(model, validation_dataset, device, do_metrics=False, ONE_BAT
                 break
 
         if do_metrics:
-            metric_dict = metrics(model, pred_embeddings_val, target_val, 0.5, device)
+            metric_dict = metrics(model, pred_embeddings_val, target_val, 1, device)
+            ic(metric_dict)
             for key in metric_dict_val.keys():
                 metric_dict_val[key] += metric_dict[key]
 
