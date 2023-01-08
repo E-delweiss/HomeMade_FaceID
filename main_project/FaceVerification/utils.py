@@ -80,7 +80,7 @@ def defineRanger(pt_file:str, num_epoch:int)->range:
         num_epoch (int)
             Number of epochs (modify the epoch to start with)
     """
-    start_epoch = int(pt_file[:pt_file.find("epochs")][-3:])
+    start_epoch = int(pt_file[:pt_file.find("epochs")][-2:])
     end_epoch = start_epoch + num_epoch
     ranger = range(start_epoch, end_epoch+1)
     return ranger
