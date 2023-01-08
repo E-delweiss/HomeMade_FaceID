@@ -17,14 +17,21 @@ class SiameseDataset(torch.utils.data.Dataset):
         len_self = len(imgset_self)
         len_lfw = len(imgset_lfw)
 
-        self.isNormalize_bool = isNormalize_bool
-        self.isAugment_bool = isAugment_bool
+        if isValSet_bool:
+            imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.3)) 
+            imgset_self = rd.sample(imgset_self, int(len_self*0.3))
+        else :
+            imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.7)) 
+            imgset_self = rd.sample(imgset_self, int(len_self*0.7))
         
         label_lfw = np.zeros(len(imgset_lfw)).tolist()
         label_self = np.ones(len(imgset_self)).tolist()
         
         self.labelset = label_lfw + label_self
         self.imgset = imgset_lfw + imgset_self
+
+        self.isNormalize_bool = isNormalize_bool
+        self.isAugment_bool = isAugment_bool
 
     def _preprocess(self, img_PIL:torch.Tensor)->torch.Tensor:
         ### Resizing
