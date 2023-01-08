@@ -9,13 +9,10 @@ import torch
 
 import utils
 # from siamese_dataset import get_training_dataset, get_validation_dataset
-# from siamese_dataset_MNIST import get_training_dataset, get_validation_dataset
 from siamese_dataset_2faces import get_training_dataset, get_validation_dataset
 from model import siameseNet
-from metrics import classAcc
+from metrics import metrics
 from loss import BatchAllTripletLoss
-# from loss_OnlineTripleLoss import OnlineTripleLoss
-# from loss_OnlineMiningAll import online_mine_all
 from validation import validation_loop
 
 
@@ -35,6 +32,7 @@ BATCH_SIZE = config.getint('TRAINING', 'train_batch_size')
 VAL_BATCH_SIZE = config.getint('TRAINING', 'val_batch_size')
 WEIGHT_DECAY = config.getfloat('TRAINING', 'weight_decay')
 DO_VALIDATION = config.getboolean('TRAINING', 'do_validation')
+DO_METRICS = config.getboolean('TRAINING', 'do_metrics')
 EPOCHS = config.getint('TRAINING', 'nb_epochs')
 LR_SCHEDULER = config.getboolean('TRAINING', 'lr_scheduler')
 
@@ -49,7 +47,6 @@ LOAD_CHECKPOINT = config.getboolean('MODEL', 'checkpoint')
 MARGIN = config.getfloat('LOSS', 'margin')
 TRESHOLD = config.getfloat('LOSS', 'threshold')
 
-RATIO = config.getint('DATASET', 'ratio')
 isNormalize_trainset = config.getboolean('DATASET', 'isNormalize_trainset')
 isAugment_trainset = config.getboolean('DATASET', 'isAugment_trainset')
 isNormalize_valset = config.getboolean('DATASET', 'isNormalize_valset')
@@ -62,15 +59,12 @@ device = utils.set_device(DEVICE, verbose=0)
 
 model = siameseNet(load_weights=LOAD_CHECKPOINT)
 # model = siameseNet(input_shape=(3,100,100), load_weights=LOAD_CHECKPOINT)
-# model = siameseNet(input_shape=(1,28,28), load_weights=LOAD_CHECKPOINT)
 model = model.to(device)
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate, weight_decay=WEIGHT_DECAY)
-# criterion = OnlineTripleLoss(margin=MARGIN)
 criterion = BatchAllTripletLoss(margin=MARGIN, device=device)
-# criterion = torch.nn.TripletMarginLoss(margin=0.2, p=2)
 
-training_dataloader = get_training_dataset(BATCH_SIZE, ratio=RATIO, isNormalize_bool=isNormalize_trainset, isAugment_bool=isAugment_trainset)
-validation_dataloader = get_validation_dataset(VAL_BATCH_SIZE, ratio=1, isNormalize_bool=isNormalize_valset, isAugment_bool=isAugment_valset)
+training_dataloader = get_training_dataset(BATCH_SIZE, isNormalize_bool=isNormalize_trainset, isAugment_bool=isAugment_trainset)
+validation_dataloader = get_validation_dataset(VAL_BATCH_SIZE, isNormalize_bool=isNormalize_valset, isAugment_bool=isAugment_valset)
 
 if LOAD_CHECKPOINT:
     pt_file = config.get('WEIGHTS', 'weights')
@@ -116,26 +110,17 @@ for epoch in ranger:
     ################################################################################
     
     for batch, (img, target) in utils.tqdm_fct(training_dataloader):    
-    # for batch, (img_anch, img_pos, img_neg) in utils.tqdm_fct(training_dataloader):    
         model.train()
         img, target = img.to(device), target.to(device)
-        # print("\n")
-        # print(target)
-        # img_anch, img_pos, img_neg = img_anch.to(device), img_pos.to(device), img_neg.to(device)
-        
+
         ### clear gradients
         optimizer.zero_grad()
         
         ### prediction
         pred_embeddings = model(img)
-        # anch_embeddings = model(img_anch)
-        # pos_embeddings = model(img_pos)
-        # neg_embeddings = model(img_neg)
 
         ### compute binary loss
-        # loss, num_positive_triplets, num_valid_triplets = online_mine_all(target, pred_embeddings, MARGIN, squared=True, device=device)
         loss, fraction_positive_triplets = criterion(pred_embeddings, target)
-        # loss = criterion(anch_embeddings, pos_embeddings, neg_embeddings)
         writer.add_scalar("Loss/train", loss, (epoch+1)*batch)
     
         ### compute gradients
@@ -146,21 +131,18 @@ for epoch in ranger:
 
         current_loss = loss.item()
         epochs_loss += current_loss
-        # print("\nCurrent loss : ", current_loss)
         if (batch+1)%FREQ == 0 or batch == len(training_dataloader.dataset)//BATCH_SIZE:
             # Recording the total loss
             batch_train_loss.append(current_loss)
 
             ############### Compute validation metrics each FREQ batch ###########################################
             if DO_VALIDATION:
-                _, target_val, pred_embeddings_val = validation_loop(model, validation_dataloader, device, ONE_BATCH=False)
+                _, _, _, metric_dict_val = validation_loop(model, validation_dataloader, device, do_metrics=DO_METRICS, ONE_BATCH=False)
                 
                 ### Validation accuracy
-                print("Compute acc...")      
-                acc = classAcc(model, pred_embeddings_val, target_val, TRESHOLD, device)
-                writer.add_scalar("Accuracy/val", acc, (epoch+1)*batch)
-                batch_val_acc.append(acc)
-                
+                for metric in metric_dict_val.keys():
+                    writer.add_scalar(f"{metric}/val", metric_dict_val[metric], (epoch+1)*batch)
+                    logging.info(f"***** {metric} : {metric_dict_val[metric]:.2f}")      
 
             else : 
                 acc = 9999
@@ -169,10 +151,7 @@ for epoch in ranger:
             if batch == 0 or (batch+1)%FREQ == 0 or batch == len(training_dataloader.dataset)//BATCH_SIZE:
                 logging.info(f"Epoch {epoch+1}/{EPOCHS}")
                 logging.info(f"Fraction positive triplet in this batch : {fraction_positive_triplets*100:.2f}")
-                # logging.info(f"Number of positive triplets in this batch : {num_positive_triplets}/{len(target)}")
-                # logging.info(f"Number of valid triplets in this batch : {num_valid_triplets}/{len(target)}")
                 logging.info(f"***** Training loss : {current_loss:.5f}")
-                logging.info(f"***** Validation accuracy : {acc*100:.2f}%")
             
             if batch == len(training_dataloader.dataset)//BATCH_SIZE or batch*BATCH_SIZE >= 400:
                 logging.info(f"Mean training loss for this epoch : {epochs_loss / len(training_dataloader):.5f}")
@@ -180,8 +159,6 @@ for epoch in ranger:
                 logging.info("")
                 print("\n\n")
 
-            # if batch*BATCH_SIZE >= 4000:
-                # break
 ################################################################################
 ### Saving results
 pickle_val_results = {
