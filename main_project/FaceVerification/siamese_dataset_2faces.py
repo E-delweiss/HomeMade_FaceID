@@ -11,9 +11,7 @@ import torchvision
 
 
 class SiameseDataset(torch.utils.data.Dataset):
-    def __init__(self, ratio:int, isValSet_bool:bool=None, isAugment_bool:bool=False, isNormalize_bool:bool=False)->tuple: 
-        # imgset_lfw = rd.sample(glob.glob('../dataset/lfw/lfw_funneled/*/*'), len(imgset_self))
-
+    def __init__(self, isValSet_bool:bool=None, isAugment_bool:bool=False, isNormalize_bool:bool=False)->tuple: 
         imgset_self = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_moi_sven_cropped/*')
         imgset_lfw = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_pauline_sven_cropped/*')
         len_self = len(imgset_self)
@@ -36,6 +34,12 @@ class SiameseDataset(torch.utils.data.Dataset):
         ])
         img_t = transform(img_PIL)
 
+        ### Normalize data
+        if self.isNormalize_bool:
+            mean, std = (0.3533, 0.3867, 0.5007), (0.2228, 0.2410, 0.2774)
+            img_t = torchvision.transforms.Normalize(mean, std)(img_t)
+        return img_t
+
         ### Data augmentation
         if self.isAugment_bool:
             augment = torchvision.transforms.Compose([
@@ -47,12 +51,6 @@ class SiameseDataset(torch.utils.data.Dataset):
                 torchvision.transforms.RandomResizedCrop(size=(100, 100), scale=(0.85, 0.85))
              ])
             img_t = augment(img_t)
-        
-        ### Normalize data
-        if self.isNormalize_bool:
-            mean, std = (0.3533, 0.3867, 0.5007), (0.2228, 0.2410, 0.2774)
-            img_t = torchvision.transforms.Normalize(mean, std)(img_t)
-        return img_t
 
     def __len__(self):
         return len(self.imgset)
