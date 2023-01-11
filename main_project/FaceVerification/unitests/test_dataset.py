@@ -19,7 +19,7 @@ class TestMNISTDataset(unittest.TestCase):
         self.BATCH_SIZE = 64
         
     def test_trainset(self): 
-        train_set = get_training_dataset(self.BATCH_SIZE)
+        train_set = get_training_dataset(self.BATCH_SIZE, isNormalize_bool=True, isAugment_bool=False)
         one_batch = next(iter(train_set))
         idx = np.random.randint(self.BATCH_SIZE)
         img = one_batch[0][idx]
@@ -29,6 +29,8 @@ class TestMNISTDataset(unittest.TestCase):
         self.assertIs(type(label), torch.Tensor)
         self.assertIs(len(one_batch[0]), self.BATCH_SIZE)
         self.assertIs(len(one_batch[1]), self.BATCH_SIZE)
+        self.assertAlmostEqual(img.mean().item(), 0., 0)
+        self.assertAlmostEqual(img.std().item(), 1., 0)
     
     def test_valset(self): 
         val_set = get_validation_dataset(self.BATCH_SIZE)

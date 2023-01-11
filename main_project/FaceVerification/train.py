@@ -22,7 +22,6 @@ config_file = os.path.join(current_folder, "config.ini")
 sys.path.append(config_file)
 ################################################################################
 
-writer = SummaryWriter()
 config = ConfigParser()
 config.read('config.ini')
 
@@ -58,7 +57,6 @@ FREQ = config.getint('PRINTING', 'freq')
 device = utils.set_device(DEVICE, verbose=0)
 
 model = siameseNet(load_weights=LOAD_CHECKPOINT)
-# model = siameseNet(input_shape=(3,100,100), load_weights=LOAD_CHECKPOINT)
 model = model.to(device)
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate, weight_decay=WEIGHT_DECAY)
 criterion = BatchAllTripletLoss(margin=MARGIN, device=device)
@@ -85,6 +83,8 @@ print(f"Learning rate : {optimizer.defaults['lr']}")
 
 torch.autograd.set_detect_anomaly(True)
 
+writer = SummaryWriter(log_dir=f'runs/{PREFIX}_RUN_{time_formatted}')
+
 utils.create_logging(prefix=PREFIX)
 logging.info(f"Pretrained is {PRETRAINED}")
 if LOAD_CHECKPOINT: logging.info(f"RESTART FROM CHECKPOINT")
@@ -92,6 +92,8 @@ logging.info(f"Learning rate = {learning_rate}")
 logging.info(f"Batch size = {BATCH_SIZE}")
 logging.info(f"Using optimizer : {optimizer}")
 logging.info("Lr Scheduler : None")
+logging.info(f"Margin : {MARGIN}")
+logging.info(f"Threshold : {TRESHOLD}")
 logging.info("")
 logging.info("Start training")
 logging.info(f"[START] : {time_formatted}")
@@ -121,7 +123,6 @@ for epoch in ranger:
 
         ### compute binary loss
         loss, fraction_positive_triplets = criterion(pred_embeddings, target)
-        writer.add_scalar("Loss/train", loss, (epoch+1)*batch)
     
         ### compute gradients
         loss.backward()
@@ -137,12 +138,18 @@ for epoch in ranger:
 
             ############### Compute validation metrics each FREQ batch ###########################################
             if DO_VALIDATION:
-                _, _, _, metric_dict_val = validation_loop(model, validation_dataloader, device, do_metrics=DO_METRICS, ONE_BATCH=False)
+                _, _, _, metric_dict_val = validation_loop(model, validation_dataloader, device, do_metrics=DO_METRICS, threshold=TRESHOLD, ONE_BATCH=False)
                 
                 ### Validation accuracy
-                for metric in metric_dict_val.keys():
-                    writer.add_scalar(f"{metric}/val", metric_dict_val[metric], (epoch+1)*batch)
-                    logging.info(f"***** {metric} : {metric_dict_val[metric]:.2f}")      
+                for metric in ["TP", "TN", "FP", "FN"]:
+                    writer.add_scalars('variables', {f"{metric}/val" : metric_dict_val[metric]}, (epoch+1)*batch)               
+                    logging.info(f"***** {metric} : {metric_dict_val[metric]:.2f}")
+                for metric in ["precision", "recall"]:
+                    writer.add_scalars('variables', {f"{metric}/val" : metric_dict_val[metric]}, (epoch+1)*batch)               
+                    logging.info(f"***** {metric} : {metric_dict_val[metric]:.2f}") 
+                writer.add_scalars('variables', {f"F1_score/val" : metric_dict_val["F1_score"]}, (epoch+1)*batch)               
+                logging.info(f"***** F1_score : {metric_dict_val['F1_score']:.2f}")
+
 
             else : 
                 acc = 9999
@@ -169,10 +176,11 @@ pickle_train_results = {
     "batch_train_loss" : batch_train_loss,
 }
 
-utils.save_model(model, PREFIX, epoch, SAVE_MODEL)
+utils.save_model(model, PREFIX, epoch, SAVE_MODEL, LOAD_CHECKPOINT)
 utils.save_losses(pickle_train_results, pickle_val_results, PREFIX, SAVE_LOSS)
 
 writer.flush()
+writer.close()
 end_time = datetime.datetime.now()
 logging.info('Time duration: {}.'.format(end_time - start_time))
 logging.info("End training.")
