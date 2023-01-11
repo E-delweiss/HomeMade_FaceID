@@ -4,29 +4,15 @@ import torchvision
 import PIL
 from icecream import ic
 
-def metrics(model, pred_embeddings:torch.Tensor, target:torch.Tensor, threshold:float, device:torch.device)->float:
+def metrics(anchor_embedding, pred_embeddings:torch.Tensor, target:torch.Tensor, threshold:float, device:torch.device)->float:
     """
     TODO
     """
-    ### Load anchor
-    mean, std = (0.3533, 0.3867, 0.5007), (0.2228, 0.2410, 0.2774)
-    anchor_path = "../../dataset/frame_base_cropped.jpeg"
-    anchor_PIL = PIL.Image.open(anchor_path).convert('RGB').resize((160,160))
-    anchor_t = torchvision.transforms.ToTensor()(anchor_PIL)
-    anchor_t = torchvision.transforms.Normalize(mean, std)(anchor_t)
-
-    ### Count positive
-    BATCH_SIZE = len(target)
-    target = target.to("cpu")
-    model.eval()
-    with torch.no_grad():
-        anchor_t = anchor_t.unsqueeze(0).to(device)
-        anchor_embedding = model(anchor_t).repeat(BATCH_SIZE, 1)
-    
     ### The operator 'aten::linalg_vector_norm' is not currently supported on the MPS backend
-    d1 = torch.linalg.norm((anchor_embedding.to("cpu") - pred_embeddings.to("cpu")), dim=1)
+    anchor_embedding, pred_embeddings, target = anchor_embedding.to("cpu"), pred_embeddings.to("cpu"), target.to("cpu")
+    d1 = torch.linalg.norm((anchor_embedding - pred_embeddings), dim=1)
 
-    ic(d1)
+    # ic(d1)
     TP = (d1 < threshold) & (target == 1)
     TN = (d1 >= threshold) & (target == 0)
     FP = (d1 < threshold) & (target == 0)
@@ -50,8 +36,6 @@ def metrics(model, pred_embeddings:torch.Tensor, target:torch.Tensor, threshold:
         "precision" : precision,
         "F1_score" : F1_score
     }
-
-    print(TP)
     return metric_dict
 
 
