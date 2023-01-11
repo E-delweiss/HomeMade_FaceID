@@ -9,6 +9,7 @@ import PIL
 import torch
 import torchvision
 
+
 def create_logging(prefix:str):
     """
     Create logging file.
@@ -86,7 +87,7 @@ def defineRanger(pt_file:str, num_epoch:int)->range:
     return ranger
 
 
-def save_model(model, prefix:str, current_epoch:int, save:bool):
+def save_model(model, prefix:str, current_epoch:int, save:bool, checkpoint:bool):
     """
     Save Pytorch weights of the model. Set the name based on timeclock.
 
@@ -101,7 +102,10 @@ def save_model(model, prefix:str, current_epoch:int, save:bool):
             If False, set a warning in log file.
     """
     if save:
-        path = f"{prefix}_{current_epoch+1}epochs"
+        if checkpoint:
+            path = f"{prefix}_{current_epoch}epochs"
+        else:
+            path = f"{prefix}_{current_epoch+1}epochs"
         tm = datetime.now()
         tm = tm.strftime("%d%m%Y_%Hh%M")
         path = path+'_'+tm+'.pt'
@@ -160,8 +164,9 @@ def mean_std_normalization()->tuple:
     """
     Get the mean and std of the dataset RGB channels.
     Note:
-        mean/std of the whole dataset :
-            mean=(0.4236, 0.3698, 0.3317), std=(0.2988, 0.2733, 0.2654)
+        mean/std of the train dataset (after /255) :
+            Mean :  tensor([0.3510, 0.3846, 0.4988])
+            Std :  tensor([0.2214, 0.2394, 0.2772])
 
     Returns:
         mean : torch.Tensor
@@ -169,9 +174,8 @@ def mean_std_normalization()->tuple:
     """
     # imgset_self = glob.glob('../dataset/dataset_moi_mbp_cropped/*')
     # imgset_lfw = glob.glob('../dataset/lfw/lfw_funneled/*/*')
-    imgset_self = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_moi_sven_cropped/*')
-    imgset_lfw = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_pauline_sven_cropped/*')
-
+    imgset_self = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_moi_sven_cropped/train/*')
+    imgset_lfw = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_pauline_sven_cropped/train/*')
 
     data_jpg = imgset_self + imgset_lfw
     data_PIL = [PIL.Image.open(img_path).convert('RGB') for img_path in data_jpg]
@@ -184,13 +188,15 @@ def mean_std_normalization()->tuple:
     
     mean = channels_sum/len(data_tensor)
     std = torch.sqrt((channels_squared_sum/len(data_tensor) - mean**2))
-    
+
     return mean, std
 
 def unormalization(img_tensor:torch.Tensor):
+    mean_ch1, mean_ch2, mean_ch3 = 0.3510, 0.3846, 0.4988
+    std_ch1, std_ch2, std_ch3 = 0.2214, 0.2394, 0.2772
     inv_normalize = torchvision.transforms.Normalize(
-        mean=[-0.4236/0.2988, -0.4055/0.2733, -0.3317/0.2654],
-        std=[1/0.2988, 1/0.2733, 1/0.2654]
+        mean=[-mean_ch1/std_ch1, -mean_ch2/std_ch2, -mean_ch3/std_ch3],
+        std=[1/std_ch1, 1/std_ch2, 1/std_ch3]
         )
     img_idx = inv_normalize(img_tensor) * 255.0
     img_idx = img_tensor.to(torch.uint8)
