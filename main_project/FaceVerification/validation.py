@@ -8,19 +8,31 @@ import torchvision
 
 def validation_loop(model, validation_dataset, device, do_metrics=False, threshold=None, ONE_BATCH=False):
     """
-    Execute validation loop
-    TODO
-    Args:
-        model (nn.Module)
-            Yolo model.
-        validation_dataset (Dataset) 
-            Validation dataloader
-        device (torch.device, optional)
-            Running device. Defaults to cpu
-        ONE_BATCH (bool, optional)
-            For debugging or testing, permits to load only one batch. Default to False.
+    _summary_
 
-    Returns: 
+    Args:
+        model (torch.nn.Module):
+             Model to evaluate.
+        validation_dataset (torch.utils.data.DataLoader)
+        device (torch.device)
+        do_metrics (bool, optional): 
+            Compute the metrics during validation loop or not. Defaults to False.
+        threshold (_type_, optional): 
+            Threshold for the distance between anchor and prediction embeddings. If the distance is lower, 
+            the two images show the same person, else the persons are different. 
+            Used in the metrics.py module. Defaults to None.
+        ONE_BATCH (bool, optional): 
+            For debuging, returns a single batch for the validation dataset. Defaults to False.
+
+    Returns:
+        img_val (torch.Tensor of size (BATCH_SIZE, 3, 160, 160)): 
+        target_val (torch.Tensor of size (BATCH_SIZE, 1)):
+        pred_embeddings_val (torch.Tensor of size (BATCH_SIZE, 128): 
+        metric_dict_val (dict{TN, TP, FP, FN, recall, precision, F1_score}
+            Contain the computed metrics for the current training step.
+            If do_metrics is True, metric_dict_val contains metrics with values
+            equal to zero.
+
     """
     print("|")
     print("| Validation...")
