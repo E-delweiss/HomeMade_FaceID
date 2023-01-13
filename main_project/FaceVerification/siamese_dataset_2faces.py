@@ -11,15 +11,11 @@ import torchvision
 
 
 class SiameseDataset(torch.utils.data.Dataset):
-    def __init__(self, isValSet_bool:bool=None, isAugment_bool:bool=False, isNormalize_bool:bool=False)->tuple: 
-        dataset_type = 'train'
-        if isValSet_bool:
-            dataset_type = 'val'
+    def __init__(self, isAugment_bool:bool=False, isNormalize_bool:bool=False)->tuple: 
+        imgset_self = glob.glob(f'../../dataset/dataset_2faces/dataset_moi_sven_cropped/*')
+        imgset_lfw = glob.glob(f'../../dataset/dataset_2faces/dataset_pauline_sven_cropped/*')
 
-        imgset_self = glob.glob(f'/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_moi_sven_cropped/{dataset_type}/*')
-        imgset_lfw = glob.glob(f'/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_pauline_sven_cropped/{dataset_type}/*')
         self.imgset = imgset_lfw + imgset_self
-        
         label_lfw = np.zeros(len(imgset_lfw)).tolist()
         label_self = np.ones(len(imgset_self)).tolist()
         self.labelset = label_lfw + label_self
@@ -69,21 +65,11 @@ class SiameseDataset(torch.utils.data.Dataset):
         return image, torch.tensor(label).to(torch.int32)
 
 
-def get_training_dataset(BATCH_SIZE=16, **kwargs):
+def get_dataset(BATCH_SIZE=16, **kwargs):
     """
     Loads and maps the training split of the dataset using the custom dataset class. 
     """
-    dataset = SiameseDataset(isValSet_bool=False, **kwargs)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
-    return dataloader
-
-def get_validation_dataset(BATCH_SIZE=None, **kwargs):
-    """
-    Loads and maps the validation split of the datasetusing the custom dataset class. 
-    """
-    dataset = SiameseDataset(isValSet_bool=True, **kwargs)
-    if BATCH_SIZE is None:
-        BATCH_SIZE = len(dataset)
+    dataset = SiameseDataset(**kwargs)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     return dataloader
 
