@@ -40,7 +40,7 @@ SAVE_LOSS = config.getboolean('SAVING', 'save_loss')
 
 PREFIX = config.get('MODEL', 'model_name')
 
-PRETRAINED = config.getboolean('MODEL', 'pretrained')
+PRETRAINED = config.get('MODEL', 'pretrained')
 LOAD_CHECKPOINT = config.getboolean('MODEL', 'checkpoint')
 
 MARGIN = config.getfloat('LOSS', 'margin')
@@ -56,7 +56,7 @@ FREQ = config.getint('PRINTING', 'freq')
 ################################################################################
 device = utils.set_device(DEVICE, verbose=0)
 
-model = siameseNet(load_weights=LOAD_CHECKPOINT)
+model = siameseNet(load_weights=LOAD_CHECKPOINT, pretrained=PRETRAINED)
 model = model.to(device)
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate, weight_decay=WEIGHT_DECAY)
 criterion = BatchAllTripletLoss(margin=MARGIN, device=device)
@@ -142,12 +142,12 @@ for epoch in ranger:
                 
                 ### Validation accuracy
                 for metric in ["TP", "TN", "FP", "FN"]:
-                    writer.add_scalars('variables', {f"{metric}/val" : metric_dict_val[metric]}, (epoch+1)*batch)               
+                    writer.add_scalars('True/False Positive/Negative', {f"{metric}/val" : metric_dict_val[metric]}, (epoch+1)*batch)               
                     logging.info(f"***** {metric} : {metric_dict_val[metric]:.2f}")
                 for metric in ["precision", "recall"]:
-                    writer.add_scalars('variables', {f"{metric}/val" : metric_dict_val[metric]}, (epoch+1)*batch)               
+                    writer.add_scalars('Precision_Recall', {f"{metric}/val" : metric_dict_val[metric]}, (epoch+1)*batch)               
                     logging.info(f"***** {metric} : {metric_dict_val[metric]:.2f}") 
-                writer.add_scalars('variables', {f"F1_score/val" : metric_dict_val["F1_score"]}, (epoch+1)*batch)               
+                writer.add_scalars('F1', {f"F1_score/val" : metric_dict_val["F1_score"]}, (epoch+1)*batch)               
                 logging.info(f"***** F1_score : {metric_dict_val['F1_score']:.2f}")
 
 

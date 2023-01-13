@@ -35,7 +35,6 @@ class SiameseNet(nn.Module):
         x = self.FaceNetModif_seq2(x)
         return x
 
-
 def siameseNet(load_weights=False, **kwargs) -> SiameseNet: 
     config = ConfigParser()
     config.read("config.ini")
@@ -43,12 +42,9 @@ def siameseNet(load_weights=False, **kwargs) -> SiameseNet:
     weights = config.get("WEIGHTS", "weights")
 
     model = SiameseNet(**kwargs)
-    # model = TNN(**kwargs)
     if load_weights:
         model.load_state_dict(torch.load(weights))
         print("Load {}".format(weights))
-
-    
     return model
     
 

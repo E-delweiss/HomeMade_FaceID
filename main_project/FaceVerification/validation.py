@@ -39,11 +39,11 @@ def validation_loop(model, validation_dataset, device, do_metrics=False, thresho
 
     #######################################################################################
     ### Load anchor
-    mean, std = (0.3533, 0.3867, 0.5007), (0.2228, 0.2410, 0.2774)
+    mean, std = (0.3510, 0.3846, 0.4988), (0.2214, 0.2394, 0.2772)
     anchor_path = "../../dataset/frame_base_cropped.jpeg"
     anchor_PIL = PIL.Image.open(anchor_path).convert('RGB').resize((160,160))
-    anchor_t = torchvision.transforms.ToTensor()(anchor_PIL)
-    anchor_norm_t = torchvision.transforms.Normalize(mean, std)(anchor_t).to(device)
+    anchor_t = torchvision.transforms.ToTensor()(anchor_PIL).to(device)
+    # anchor_t = torchvision.transforms.Normalize(mean, std)(anchor_t).to(device)
 
     #######################################################################################
     metric_list = ["TP", "TN", "FP", "FN", "precision", "recall", "F1_score"]
@@ -55,7 +55,7 @@ def validation_loop(model, validation_dataset, device, do_metrics=False, thresho
         with torch.no_grad():
             ### prediction
             pred_embeddings_val = model(img_val)
-            anchor_embedding = model(anchor_norm_t.unsqueeze(0)).repeat(len(target_val), 1)  
+            anchor_embedding = model(anchor_t.unsqueeze(0)).repeat(len(target_val), 1)  
             
             if ONE_BATCH is True:
                 break
