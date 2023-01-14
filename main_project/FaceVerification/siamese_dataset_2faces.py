@@ -35,18 +35,6 @@ class SiameseDataset(torch.utils.data.Dataset):
         if self.isNormalize_bool:
             mean, std = (0.3510, 0.3846, 0.4988), (0.2214, 0.2394, 0.2772)
             img_t = torchvision.transforms.Normalize(mean, std)(img_t)
-
-        ### Data augmentation
-        if self.isAugment_bool:
-            augment = torchvision.transforms.Compose([
-                torchvision.transforms.RandomHorizontalFlip(p=0.5),
-                torchvision.transforms.ColorJitter(brightness=[0.6,1], contrast=[1,1.2], saturation=[0,1]),
-                torchvision.transforms.RandomAdjustSharpness(12, p=0.5),
-                torchvision.transforms.RandomRotation(degrees=(-10,10)),
-                torchvision.transforms.RandomPerspective(distortion_scale=0.22, p=0.5, fill=0),
-                torchvision.transforms.RandomResizedCrop(size=(100, 100), scale=(0.85, 0.85))
-             ])
-            img_t = augment(img_t)
         return img_t
 
     def __len__(self):

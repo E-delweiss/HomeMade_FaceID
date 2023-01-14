@@ -38,7 +38,6 @@ PRETRAINED = config.get('MODEL', 'pretrained')
 TRESHOLD = config.getfloat('LOSS', 'threshold')
 
 isNormalize = config.getboolean('DATASET', 'isNormalize')
-isAugment = config.getboolean('DATASET', 'isAugment')
 
 FREQ = config.getint('PRINTING', 'freq')
 
@@ -72,6 +71,8 @@ logging.info(f"[START] : {time_formatted}")
 anchor_path = "../../dataset/frame_base_cropped.jpeg"
 anchor_PIL = PIL.Image.open(anchor_path).convert('RGB').resize((160,160))
 anchor_t = torchvision.transforms.ToTensor()(anchor_PIL).to(device)
+mean, std = (0.3533, 0.3867, 0.5007), (0.2228, 0.2410, 0.2774)
+normalizer = torchvision.transforms.Normalize(mean, std)
 
 metric_list = ["TP", "TN", "FP", "FN", "precision", "recall", "F1_score"]
 metric_dict_val = dict.fromkeys(metric_list, 0)
@@ -83,7 +84,7 @@ for batch, (img, target) in utils.tqdm_fct(dataloader):
         
         ### prediction
         pred_embeddings = model(img)
-        anchor_embedding = model(anchor_t.unsqueeze(0)).repeat(len(target), 1)  
+        anchor_embedding = model(normalizer(anchor_t).unsqueeze(0)).repeat(len(target), 1)  
         
         if ONE_BATCH is True:
             break
