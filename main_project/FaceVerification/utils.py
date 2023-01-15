@@ -172,10 +172,10 @@ def mean_std_normalization()->tuple:
         mean : torch.Tensor
         std : torch.Tensor
     """
-    # imgset_self = glob.glob('../dataset/dataset_moi_mbp_cropped/*')
-    # imgset_lfw = glob.glob('../dataset/lfw/lfw_funneled/*/*')
-    imgset_self = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_moi_sven_cropped/train/*')
-    imgset_lfw = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_pauline_sven_cropped/train/*')
+    imgset_self = glob.glob('../../dataset/dataset_moi_mbp_cropped/*')
+    imgset_lfw = glob.glob('../../dataset/lfw/lfw_funneled/*/*')
+    # imgset_self = glob.glob('/dataset/dataset_moi_sven_cropped/train/*')
+    # imgset_lfw = glob.glob('/dataset/dataset_pauline_sven_cropped/train/*')
 
     data_jpg = imgset_self + imgset_lfw
     data_PIL = [PIL.Image.open(img_path).convert('RGB') for img_path in data_jpg]

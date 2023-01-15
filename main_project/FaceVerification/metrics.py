@@ -29,7 +29,6 @@ def metrics(anchor_embedding:torch.Tensor, pred_embeddings:torch.Tensor, target:
     anchor_embedding, pred_embeddings, target = anchor_embedding.to("cpu"), pred_embeddings.to("cpu"), target.to("cpu")
     d1 = torch.linalg.norm((anchor_embedding - pred_embeddings), dim=1)
 
-    # ic(d1)
     TP = (d1 < threshold) & (target == 1)
     TN = (d1 >= threshold) & (target == 0)
     FP = (d1 < threshold) & (target == 0)

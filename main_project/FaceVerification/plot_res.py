@@ -12,8 +12,8 @@ import matplotlib.patheffects as PathEffects
 import seaborn as sns
 
 from model import siameseNet
-from siamese_dataset_2faces import get_dataset
-# from siamese_dataset_kfaces import get_dataset
+# from siamese_dataset_2faces import get_dataset
+from siamese_dataset import get_dataset
 
 
 
@@ -107,26 +107,5 @@ def plot_confusionMatrix(bacth_size, threshold, device, root="results", title=No
     plt.savefig(os.path.join(root, str(title)))
 
 if __name__ == "__main__":
-    # plot_TSNEE(256, torch.device("cpu"), subtitle="InceptionResNet_vggface2_1vs1_faces")
-    plot_confusionMatrix(256, threshold=1, device=torch.device("cpu"), root="results", title="Confusion_Matrix")
-
-
-
-
-
-
-
-
-# ## Confusion matrix
-# fig_confusionMatrix = plt.figure(figsize = (12,7))
-
-# # constant for classes
-# classes = [str(x) for x in range(C)]
-
-# # Build confusion matrix
-# cf_matrix = confusion_matrix(y_true, y_pred)
-# df_cm = pd.DataFrame(cf_matrix/np.sum(cf_matrix)*C, index = [i for i in classes],
-#                      columns = [i for i in classes])
-
-# sn.heatmap(df_cm, annot=True)
-# plt.savefig('confusion_matrix.png')
+    plot_TSNEE(256, torch.device("cpu"), subtitle="InceptionResNet_vggface2_kvs1_faces")
+    # plot_confusionMatrix(256, threshold=1.1, device=torch.device("cpu"), root="results", title="Confusion_Matrix")
