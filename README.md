@@ -7,7 +7,7 @@ This project uses deep learning through three main steps :
 - Verifying face
 - Unlocking computer via shell script.
 
-The first part has been done on MNIST dataset to understand the concept of Siamese Networks: same  networks are used to turn images into embeddings (128 dimension encoding vectors). Each embedding vector represents (*encodes*) an image. The more 2 images are different, the larger the difference between their embedding vectors. Training has been performed with **Online Triplet Mining**. See the [roadmap for MNIST](https://github.com/E-delweiss/HomeMade_FaceID/blob/main/imageVerification_MNIST/roadmap.md).
+The first part has been done on MNIST dataset to understand the concept of Siamese Networks: same  networks are used to turn images into embeddings (128 dimension encoding vectors). Each embedding vector represents (*encodes*) an image. The more 2 images are different, the larger the difference between their embedding vectors. Training has been performed with **Online Triplet Mining**. See the [roadmap for MNIST](https://github.com/E-delweiss/HomeMade_FaceID/wiki/Warming-up-with-MNIST).
 
 This [first project](https://github.com/E-delweiss/HomeMade_FaceID/tree/main/imageVerification_MNIST) on MNIST gives visualizations in 2D space thanks to the TSNE algorithm. There are two results: 
 * the first shows how the model takes apart **each handwritting digits from each other**, 
