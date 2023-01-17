@@ -16,8 +16,8 @@ class SiameseDataset(torch.utils.data.Dataset):
         if isValSet_bool:
             dataset_type = 'val'
 
-        imgset_self = glob.glob(f'/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_moi_sven_cropped/{dataset_type}/*')
-        imgset_lfw = glob.glob(f'/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_pauline_sven_cropped/{dataset_type}/*')
+        imgset_self = glob.glob(f'../../dataset/dataset_2faces_trainval/dataset_moi_sven_cropped/{dataset_type}/*')
+        imgset_lfw = glob.glob(f'../../dataset/dataset_2faces_trainval/dataset_pauline_sven_cropped/{dataset_type}/*')
         self.imgset = imgset_lfw + imgset_self
         
         label_lfw = np.zeros(len(imgset_lfw)).tolist()
@@ -45,10 +45,10 @@ class SiameseDataset(torch.utils.data.Dataset):
             augment = torchvision.transforms.Compose([
                 torchvision.transforms.RandomHorizontalFlip(p=0.5),
                 torchvision.transforms.ColorJitter(brightness=[0.6,1], contrast=[1,1.2], saturation=[0,1]),
-                torchvision.transforms.RandomAdjustSharpness(12, p=0.5),
-                torchvision.transforms.RandomRotation(degrees=(-10,10)),
-                torchvision.transforms.RandomPerspective(distortion_scale=0.22, p=0.5, fill=0),
-                torchvision.transforms.RandomResizedCrop(size=(100, 100), scale=(0.85, 0.85))
+                # torchvision.transforms.RandomAdjustSharpness(10, p=0.5),
+                # torchvision.transforms.RandomRotation(degrees=(-5,5)),
+                torchvision.transforms.RandomPerspective(distortion_scale=0.15, p=1, fill=0),
+                # torchvision.transforms.RandomResizedCrop(size=(100, 100), scale=(0.85, 0.85))
              ])
             img_t = augment(img_t)
         return img_t
@@ -89,5 +89,6 @@ def get_validation_dataset(BATCH_SIZE=None, **kwargs):
 
 
 if __name__ == "__main__":
-    dataset = get_validation_dataset(isAugment_bool=False, isNormalize_bool=True)
-    print(next(iter(dataset))[1])
+    dataset = get_validation_dataset(isAugment_bool=True, isNormalize_bool=False)
+    idx = rd.randint(0, len(dataset))
+    dataset[idx][0].show()

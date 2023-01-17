@@ -40,7 +40,7 @@ SAVE_LOSS = config.getboolean('SAVING', 'save_loss')
 
 PREFIX = config.get('MODEL', 'model_name')
 
-PRETRAINED = config.getboolean('MODEL', 'pretrained')
+PRETRAINED = config.get('MODEL', 'pretrained')
 LOAD_CHECKPOINT = config.getboolean('MODEL', 'checkpoint')
 
 MARGIN = config.getfloat('LOSS', 'margin')

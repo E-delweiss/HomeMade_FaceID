@@ -13,7 +13,13 @@ class SiameseNet(nn.Module):
         """Custom the FaceNet InceptionResnetV1 model.
         """
         super(SiameseNet, self).__init__()
+        count=0
         self.FaceNetModif_seq1 = nn.Sequential(*list(InceptionResnetV1(pretrained=pretrained).children())[:-3])
+        for param in self.FaceNetModif_seq1.parameters():
+            param.requires_grad = False
+            # if count == 361:
+            #     break
+            # count += 1
         self.FaceNetModif_seq2 = nn.Sequential(
             nn.Flatten(),
             nn.Linear(1792, 128, bias=True),
@@ -54,5 +60,5 @@ def siameseNet(load_weights=False, **kwargs) -> SiameseNet:
 
 if __name__ == "__main__":
     model = siameseNet()
-    summary(model, (16, 1, 160, 160))
+    summary(model, (16, 3, 160, 160))
     
