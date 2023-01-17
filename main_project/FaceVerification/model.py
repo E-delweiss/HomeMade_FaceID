@@ -13,12 +13,13 @@ class SiameseNet(nn.Module):
         """Custom the FaceNet InceptionResnetV1 model.
         """
         super(SiameseNet, self).__init__()
-        self.FaceNetModif_seq1 = nn.Sequential(*list(InceptionResnetV1(pretrained=pretrained).children())[:-3])
-        self.FaceNetModif_seq2 = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(1792, 128, bias=True),
-            nn.BatchNorm1d(128, eps=0.001, momentum=0.1, affine=True)
-        )
+        # self.FaceNetModif_seq1 = nn.Sequential(*list(InceptionResnetV1(pretrained=pretrained).children())[:-3])
+        self.FaceNetModif_seq1 = InceptionResnetV1(pretrained=pretrained)
+        # self.FaceNetModif_seq2 = nn.Sequential(
+        #     nn.Flatten(),
+        #     nn.Linear(1792, 128, bias=True),
+        #     nn.BatchNorm1d(128, eps=0.001, momentum=0.1, affine=True)
+        # )
     def forward(self, x:torch.Tensor)->torch.Tensor:
         """Forward method of the model.
 
@@ -32,7 +33,7 @@ class SiameseNet(nn.Module):
                 Batch of embeddings as the predictions of the model
         """
         x = self.FaceNetModif_seq1(x)
-        x = self.FaceNetModif_seq2(x)
+        # x = self.FaceNetModif_seq2(x)
         return x
 
 def siameseNet(load_weights=False, **kwargs) -> SiameseNet: 

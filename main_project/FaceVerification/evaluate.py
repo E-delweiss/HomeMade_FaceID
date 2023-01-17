@@ -10,7 +10,8 @@ import torchvision
 import PIL
 
 import utils
-from siamese_dataset import get_training_dataset, get_validation_dataset
+# from siamese_dataset import get_training_dataset, get_validation_dataset
+from siamese_dataset import get_dataset
 # from siamese_dataset_2faces import get_dataset
 from model import siameseNet
 from metrics import metrics
@@ -47,7 +48,7 @@ device = utils.set_device(DEVICE, verbose=0)
 model = siameseNet(load_weights=WEIGHTS, pretrained=PRETRAINED)
 model = model.to(device)
 
-dataloader = get_training_dataset(BATCH_SIZE, isNormalize_bool=isNormalize)
+dataloader = get_dataset(BATCH_SIZE, isNormalize_bool=isNormalize)
 ################################################################################
 
 delta_time = datetime.timedelta(hours=1)

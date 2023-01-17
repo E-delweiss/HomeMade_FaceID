@@ -25,28 +25,33 @@ class SiameseDataset(torch.utils.data.Dataset):
         self.labelset = self.label_lfw + self.label_self
         self.imgset = self.imgset_lfw + self.imgset_self
 
-    def _preprocess(self, img_PIL:torch.Tensor)->torch.Tensor:
-        ### Resizing
-        transform = torchvision.transforms.Compose([
+        self.transform = torchvision.transforms.Compose([
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Resize((160,160))
         ])
-        img_t = transform(img_PIL)
+
+    def _preprocess(self, img_PIL:torch.Tensor)->torch.Tensor:
+        ### Resizing
+        # transform = torchvision.transforms.Compose([
+        #     torchvision.transforms.ToTensor(),
+        #     torchvision.transforms.Resize((160,160))
+        # ])
+        img_t = self.transform(img_PIL)
+
+        ### Normalize data
+        if self.isNormalize_bool:
+            mean, std = (0.4236, 0.3698, 0.3317), (0.2988, 0.2733, 0.2654)
+            img_t = torchvision.transforms.Normalize(mean, std)(img_t)
 
         ### Data augmentation
         if self.isAugment_bool:
             augment = torchvision.transforms.Compose([
                 torchvision.transforms.RandomHorizontalFlip(p=0.5),
-                torchvision.transforms.ColorJitter(brightness=[0.5,1], contrast=[1,1.2], saturation=[0,1]),
+                # torchvision.transforms.ColorJitter(brightness=[0.5,1], contrast=[1,1.2], saturation=[0,1]),
                 torchvision.transforms.RandomAdjustSharpness(12, p=0.7),
-                torchvision.transforms.RandomRotation(degrees=5)
+                # torchvision.transforms.RandomRotation(degrees=5)
                 ])
             img_t = augment(img_t)
-        
-        ### Normalize data (TBM)
-        if self.isNormalize_bool:
-            mean, std = (0.4236, 0.3698, 0.3317), (0.2988, 0.2733, 0.2654)
-            img_t = torchvision.transforms.Normalize(mean, std)(img_t)
         return img_t
 
     def __len__(self):
@@ -73,7 +78,10 @@ class SiameseDataset(torch.utils.data.Dataset):
             label = self.labelset[idx]
 
         img_PIL = PIL.Image.open(img_path).convert('RGB')
-        image = self._preprocess(img_PIL)
+        if label==1:
+            image = self._preprocess(img_PIL)
+        else:
+            image = self.transform(img_PIL)
 
         return image, torch.tensor(label, dtype=torch.int32)
 
@@ -88,5 +96,5 @@ def get_dataset(BATCH_SIZE=16, **kwargs):
 
 
 if __name__ == "__main__":
-    dataset = get_training_dataset(BATCH_SIZE=32, ratio=1, isAugment_bool=True, isNormalize_bool=False)
+    dataset = get_dataset(BATCH_SIZE=32, ratio=1, isAugment_bool=True, isNormalize_bool=True)
     print(next(iter(dataset))[1])
