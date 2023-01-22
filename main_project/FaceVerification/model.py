@@ -14,17 +14,19 @@ class SiameseNet(nn.Module):
         """
         super(SiameseNet, self).__init__()
         count=0
-        self.FaceNetModif_seq1 = nn.Sequential(*list(InceptionResnetV1(pretrained=pretrained).children())[:-3])
+        # self.FaceNetModif_seq1 = nn.Sequential(*list(InceptionResnetV1(pretrained=pretrained).children())[:-3])
+        self.FaceNetModif_seq1 = InceptionResnetV1(pretrained=pretrained)
         for param in self.FaceNetModif_seq1.parameters():
             param.requires_grad = False
-            # if count == 361:
-            #     break
-            # count += 1
-        self.FaceNetModif_seq2 = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(1792, 128, bias=True),
-            nn.BatchNorm1d(128, eps=0.001, momentum=0.1, affine=True)
-        )
+            if count == 376:
+                break
+            count += 1
+        # print(count)
+        # self.FaceNetModif_seq2 = nn.Sequential(
+        #     nn.Flatten(),
+        #     nn.Linear(1792, 128, bias=True),
+        #     nn.BatchNorm1d(128, eps=0.001, momentum=0.1, affine=True)
+        # )
     def forward(self, x:torch.Tensor)->torch.Tensor:
         """Forward method of the model.
 
@@ -38,7 +40,7 @@ class SiameseNet(nn.Module):
                 Batch of embeddings as the predictions of the model
         """
         x = self.FaceNetModif_seq1(x)
-        x = self.FaceNetModif_seq2(x)
+        # x = self.FaceNetModif_seq2(x)
         return x
 
 

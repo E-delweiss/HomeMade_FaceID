@@ -14,8 +14,8 @@ class SiameseDataset(torch.utils.data.Dataset):
     def __init__(self, ratio:int, isValSet_bool:bool=None, isAugment_bool:bool=False, isNormalize_bool:bool=False)->tuple: 
         # imgset_lfw = rd.sample(glob.glob('../dataset/lfw/lfw_funneled/*/*'), len(imgset_self))
 
-        imgset_self = glob.glob('../dataset/dataset_moi_mbp_cropped/*')
-        imgset_lfw = glob.glob('../dataset/lfw/lfw_funneled/*/*')
+        imgset_self = glob.glob('../../dataset/dataset_moi_mbp_cropped/*')
+        imgset_lfw = glob.glob('../../dataset/lfw/lfw_funneled/*/*')
         len_self = len(imgset_self)
         len_lfw = len(imgset_lfw)
 
@@ -35,9 +35,7 @@ class SiameseDataset(torch.utils.data.Dataset):
         
         self.labelset = self.label_lfw + self.label_self
         self.imgset = self.imgset_lfw + self.imgset_self
-        # combined = list(zip(self.imgset_lfw + self.imgset_self, self.label_lfw + self.label_self))
-        # rd.shuffle(combined)
-        # self.imgset, self.labelset = zip(*combined)
+
 
     def _preprocess(self, img_PIL:torch.Tensor)->torch.Tensor:
         ### Resizing
@@ -46,6 +44,11 @@ class SiameseDataset(torch.utils.data.Dataset):
             torchvision.transforms.Resize((160,160))
         ])
         img_t = transform(img_PIL)
+
+        ### Normalize data
+        if self.isNormalize_bool:
+            mean, std = (0.4236, 0.3698, 0.3317), (0.2988, 0.2733, 0.2654)
+            img_t = torchvision.transforms.Normalize(mean, std)(img_t)
 
         ### Data augmentation
         if self.isAugment_bool:
@@ -57,10 +60,6 @@ class SiameseDataset(torch.utils.data.Dataset):
                 ])
             img_t = augment(img_t)
         
-        ### Normalize data
-        if self.isNormalize_bool:
-            mean, std = (0.4236, 0.3698, 0.3317), (0.2988, 0.2733, 0.2654)
-            img_t = torchvision.transforms.Normalize(mean, std)(img_t)
         return img_t
 
     def __len__(self):
@@ -114,5 +113,5 @@ def get_validation_dataset(BATCH_SIZE=None, **kwargs):
 
 
 if __name__ == "__main__":
-    dataset = get_training_dataset(ratio=1, isAugment_bool=True, isNormalize_bool=False)
+    dataset = get_training_dataset(ratio=6, isAugment_bool=True, isNormalize_bool=False)
     print(next(iter(dataset))[1])

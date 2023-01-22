@@ -8,8 +8,8 @@ from torch.utils.tensorboard import SummaryWriter
 import torch
 
 import utils
-# from siamese_dataset import get_training_dataset, get_validation_dataset
-from siamese_dataset_2faces import get_training_dataset, get_validation_dataset
+from siamese_dataset import get_training_dataset, get_validation_dataset
+# from siamese_dataset_2faces import get_training_dataset, get_validation_dataset
 from model import siameseNet
 from metrics import metrics
 from loss import BatchAllTripletLoss
@@ -46,6 +46,7 @@ LOAD_CHECKPOINT = config.getboolean('MODEL', 'checkpoint')
 MARGIN = config.getfloat('LOSS', 'margin')
 TRESHOLD = config.getfloat('LOSS', 'threshold')
 
+ratio = config.getint("DATASET", "ratio")
 isNormalize_trainset = config.getboolean('DATASET', 'isNormalize_trainset')
 isAugment_trainset = config.getboolean('DATASET', 'isAugment_trainset')
 isNormalize_valset = config.getboolean('DATASET', 'isNormalize_valset')
@@ -61,8 +62,8 @@ model = model.to(device)
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate, weight_decay=WEIGHT_DECAY)
 criterion = BatchAllTripletLoss(margin=MARGIN, device=device)
 
-training_dataloader = get_training_dataset(BATCH_SIZE, isNormalize_bool=isNormalize_trainset, isAugment_bool=isAugment_trainset)
-validation_dataloader = get_validation_dataset(VAL_BATCH_SIZE, isNormalize_bool=isNormalize_valset, isAugment_bool=isAugment_valset)
+training_dataloader = get_training_dataset(BATCH_SIZE, ratio=ratio, isNormalize_bool=isNormalize_trainset, isAugment_bool=isAugment_trainset)
+validation_dataloader = get_validation_dataset(VAL_BATCH_SIZE, ratio=ratio, isNormalize_bool=isNormalize_valset, isAugment_bool=isAugment_valset)
 
 if LOAD_CHECKPOINT:
     pt_file = config.get('WEIGHTS', 'weights')
