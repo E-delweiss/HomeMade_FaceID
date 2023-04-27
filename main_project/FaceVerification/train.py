@@ -65,8 +65,8 @@ device = utils.set_device(DEVICE, verbose=0)
 model = siameseNet(load_weights=LOAD_CHECKPOINT, pretrained=PRETRAINED)
 model = model.to(device)
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate, weight_decay=WEIGHT_DECAY)
-# criterion = BatchAllTripletLoss(margin=MARGIN, device=device)
-criterion = torch.nn.TripletMarginLoss(margin=MARGIN)
+criterion = BatchAllTripletLoss(margin=MARGIN, device=device)
+# criterion = torch.nn.TripletMarginLoss(margin=MARGIN)
 # dummy = torch.rand(8, 3, 160, 160).to(device)
 # output = model(dummy)
 # summary(model.to("cpu"), (8, 3, 160, 160))
@@ -124,28 +124,25 @@ for epoch in ranger:
 
     ################################################################################
     
-    # for batch, (img, target) in utils.tqdm_fct(training_dataloader):
-    for batch, (img_pos, img_neg, targ_pos, targ_neg) in utils.tqdm_fct(training_dataloader):
+    for batch, (img, target) in utils.tqdm_fct(training_dataloader):
         model.train()
-        # img, target = img.to(device), target.to(device)
-        img_pos, img_neg, targ_pos, targ_neg = img_pos.to(device), img_neg.to(device), targ_pos.to(device), targ_neg.to(device)
+        img, target = img.to(device), target.to(device)
 
         ### clear gradients
         optimizer.zero_grad()
         
         ### prediction
         with torch.no_grad():
-            anchor_t_batch = anchor_t.repeat(img_pos.shape[0],1,1,1).to(device)
+            anchor_t_batch = anchor_t.repeat(img.shape[0],1,1,1).to(device)
             pred_embeddings_anch = model(anchor_t_batch)
-        pred_embeddings_neg = model(img_neg)
-        pred_embeddings_pos = model(img_pos)
+        pred_embeddings = model(img)
+        # pred_embeddings_pos = model(img_pos)
 
 
         ### compute binary loss
-        # loss, fraction_positive_triplets = criterion(pred_embeddings, 
-        # target)
-        loss = criterion(pred_embeddings_anch, pred_embeddings_pos, pred_embeddings_neg)
-        fraction_positive_triplets = 99999
+        loss, fraction_positive_triplets = criterion(pred_embeddings, target)
+        # loss = criterion(pred_embeddings_anch, pred_embeddings_pos, pred_embeddings_neg)
+        # fraction_positive_triplets = 99999
     
         ### compute gradients
         loss.backward()

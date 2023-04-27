@@ -29,7 +29,7 @@ def scatter(x, labels, root='plot', subtitle=None):
     ## ---------------------------- ##
     
     ## Add label on top of each cluster ##
-    idx2name = ['positive', 'negative', 'anchor']
+    idx2name = ['1', '0', '2']
         
     txts = []
     for i in range(num_classes):
@@ -55,8 +55,8 @@ def TSNEE_plot(model, dataloader):
     tm = tm.strftime("%d%m_%Hh%M_%Ss")
     device = next(model.parameters()).device
 
-    img_pos, img_neg, target_pos, target_neg = next(iter(dataloader))
-    img_pos, img_neg, target_pos, target_neg = img_pos.to(device), img_neg.to(device), target_pos.to(device), target_neg.to(device)
+    img, target = next(iter(dataloader))
+    img, target = img.to(device), target.to(device)
 
     anchor_path = "../../dataset/frame_base_cropped.jpeg"
     anchor_PIL = PIL.Image.open(anchor_path).convert('RGB').resize((160,160))
@@ -66,8 +66,8 @@ def TSNEE_plot(model, dataloader):
 
     model.eval()
     with torch.no_grad():
-        pred_outputs = model(torch.cat([img_pos, img_neg, anchor_t.unsqueeze(0)], axis=0))
+        pred_outputs = model(torch.cat([img, anchor_t.unsqueeze(0)], axis=0))
     tsne_embeds = tsne.fit_transform(pred_outputs.cpu().detach().numpy())
 
-    targets = torch.cat([target_pos, target_neg, torch.tensor([2]).to(device)],axis=0).cpu().numpy()
+    targets = torch.cat([target, torch.tensor([2]).to(device)],axis=0).cpu().numpy()
     scatter(tsne_embeds, targets, subtitle=f'TSNEE_{tm}')

@@ -12,8 +12,6 @@ import torchvision
 
 class SiameseDataset(torch.utils.data.Dataset):
     def __init__(self, ratio:int, isValSet_bool:bool=None, isAugment_bool:bool=False, isNormalize_bool:bool=False)->tuple: 
-        # imgset_lfw = rd.sample(glob.glob('../dataset/lfw/lfw_funneled/*/*'), len(imgset_self))
-
         imgset_self = glob.glob('../../dataset/dataset_moi_mbp_cropped/*')
         imgset_lfw = glob.glob('../../dataset/lfw/lfw_funneled/*/*')
         len_self = len(imgset_self)
@@ -70,6 +68,9 @@ class SiameseDataset(torch.utils.data.Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
+        # if self.isValSet_bool:
+            # torch.manual_seed(0)
+
         if self.ratio:
             pos_idx = idx // (self.ratio + 1)
 
@@ -85,26 +86,26 @@ class SiameseDataset(torch.utils.data.Dataset):
         else:
             if self.isValSet_bool:
                 rd.seed(idx)
-            # img_path = self.imgset[idx]
-            # label = self.labelset[idx]
-            idx_pos = rd.randint(0, len(self.imgset_self)-1)
-            idx_neg = rd.randint(0, len(self.imgset_lfw)-1)
-            img_path_pos = self.imgset_self[idx_pos]
-            img_path_neg = self.imgset_lfw[idx_neg]
-            label_pos = self.label_self[idx_pos]
-            label_neg = self.label_lfw[idx_neg]
+            img_path = self.imgset[idx]
+            label = self.labelset[idx]
+            # idx_pos = rd.randint(0, len(self.imgset_self)-1)
+            # idx_neg = rd.randint(0, len(self.imgset_lfw)-1)
+            # img_path_pos = self.imgset_self[idx_pos]
+            # img_path_neg = self.imgset_lfw[idx_neg]
+            # label_pos = self.label_self[idx_pos]
+            # label_neg = self.label_lfw[idx_neg]
 
 
-        # img_PIL = PIL.Image.open(img_path).convert('RGB')
-        # image = self._preprocess(img_PIL)
+        img_PIL = PIL.Image.open(img_path).convert('RGB')
+        image = self._preprocess(img_PIL)
 
-        img_PIL_pos = PIL.Image.open(img_path_pos).convert('RGB')
-        img_PIL_neg = PIL.Image.open(img_path_neg).convert('RGB')
-        image_pos = self._preprocess(img_PIL_pos)
-        image_neg = self._preprocess(img_PIL_neg)
+        # img_PIL_pos = PIL.Image.open(img_path_pos).convert('RGB')
+        # img_PIL_neg = PIL.Image.open(img_path_neg).convert('RGB')
+        # image_pos = self._preprocess(img_PIL_pos)
+        # image_neg = self._preprocess(img_PIL_neg)
 
-        # return image, torch.tensor(label, dtype=torch.int32)
-        return image_pos, image_neg, torch.tensor(label_pos).to(torch.int32), torch.tensor(label_neg).to(torch.int32)
+        return image, torch.tensor(label).to(torch.int32)
+        # return image_pos, image_neg, torch.tensor(label_pos).to(torch.int32), torch.tensor(label_neg).to(torch.int32)
 
 
 def get_training_dataset(BATCH_SIZE=16, **kwargs):
