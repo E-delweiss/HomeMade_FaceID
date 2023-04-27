@@ -39,36 +39,47 @@ def validation_loop(model, validation_dataset, device, do_metrics=False, thresho
 
     #######################################################################################
     ### Load anchor
-    mean, std = (0.3533, 0.3867, 0.5007), (0.2228, 0.2410, 0.2774)
+    # mean, std = (0.3533, 0.3867, 0.5007), (0.2228, 0.2410, 0.2774)
     anchor_path = "../../dataset/frame_base_cropped.jpeg"
     anchor_PIL = PIL.Image.open(anchor_path).convert('RGB').resize((160,160))
-    anchor_t = torchvision.transforms.ToTensor()(anchor_PIL)
-    anchor_norm_t = torchvision.transforms.Normalize(mean, std)(anchor_t).to(device)
+    anchor_t = torchvision.transforms.ToTensor()(anchor_PIL).to(device)
+    # anchor_norm_t = torchvision.transforms.Normalize(mean, std)(anchor_t).to(device)
 
     #######################################################################################
     metric_list = ["TP", "TN", "FP", "FN", "precision", "recall", "F1_score"]
     metric_dict_val = dict.fromkeys(metric_list, 0)
     
     model.eval()
-    for (img_val, target_val) in validation_dataset:
-        img_val, target_val = img_val.to(device), target_val.to(device)
+    # for (img_val, target_val) in validation_dataset:
+    for img_pos, img_neg, targ_pos, targ_neg in validation_dataset:
+        # img, target = img.to(device), target.to(device)
+        img_pos, img_neg, targ_pos, targ_neg = img_pos.to(device), img_neg.to(device), targ_pos.to(device), targ_neg.to(device)
         with torch.no_grad():
             ### prediction
-            pred_embeddings_val = model(img_val)
-            anchor_embedding = model(anchor_norm_t.unsqueeze(0)).repeat(len(target_val), 1)  
+            # pred_embeddings_val = model(img_val)
+            pred_embeddings_pos = model(img_pos)
+            pred_embeddings_neg = model(img_neg)
+            anchor_embedding = model(anchor_t.unsqueeze(0))
+            # ic(anchor_embedding.shape)
+
+            pred_embeddings = torch.cat([pred_embeddings_pos, pred_embeddings_neg], axis=0)
+            targets = torch.cat([targ_pos, targ_neg], axis=0)
+
+            anchor_embedding_batch = anchor_embedding.repeat(pred_embeddings.shape[0], 1) 
             
             if ONE_BATCH is True:
                 break
 
         if do_metrics:
-            metric_dict = metrics(anchor_embedding, pred_embeddings_val, target_val, threshold, device)
+            metric_dict = metrics(anchor_embedding_batch, pred_embeddings, targets, threshold, device)
             # ic(metric_dict)
             for key in metric_dict_val.keys():
                 metric_dict_val[key] += metric_dict[key]
 
     metric_dict_val.update((key, value/len(validation_dataset)) for key, value in metric_dict_val.items())
 
-    return img_val, target_val, pred_embeddings_val, metric_dict_val
+    # return img_val, target_val, pred_embeddings_val, metric_dict_val
+    return img_pos, img_neg, targets, anchor_embedding, metric_dict_val
 
 
 

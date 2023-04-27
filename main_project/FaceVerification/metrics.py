@@ -4,7 +4,7 @@ import torchvision
 import PIL
 from icecream import ic
 
-def metrics(anchor_embedding:torch.Tensor, pred_embeddings:torch.Tensor, target:torch.Tensor, threshold:float, device:torch.device)->dict:
+def metrics(anchor_embedding:torch.Tensor, pred_embeddings:torch.Tensor, targets:torch.Tensor, threshold:float, device:torch.device)->dict:
     """
     Compute metrics for the current training step.
 
@@ -14,7 +14,7 @@ def metrics(anchor_embedding:torch.Tensor, pred_embeddings:torch.Tensor, target:
             it changes each time the validation loop is called.
         pred_embeddings (torch.Tensor of size (BATCH_SIZE, 128))
             Prediction embeddings of the current batch.
-        target (torch.Tensor of size (BATCH_SIZE, 1))
+        targets (torch.Tensor of size (BATCH_SIZE, 1))
             Target of the current batch (0 if it is not the administrator's face, 1 if it is).
         threshold (float)
             Threshold for the distance between anchor and prediction embeddings. If the distance is lower, 
@@ -26,14 +26,13 @@ def metrics(anchor_embedding:torch.Tensor, pred_embeddings:torch.Tensor, target:
             Contain the computed metrics for the current training step.
     """
     ### The operator 'aten::linalg_vector_norm' is not currently supported on the MPS backend
-    anchor_embedding, pred_embeddings, target = anchor_embedding.to("cpu"), pred_embeddings.to("cpu"), target.to("cpu")
+    anchor_embedding, pred_embeddings, targets = anchor_embedding.to("cpu"), pred_embeddings.to("cpu"), targets.to("cpu")
     d1 = torch.linalg.norm((anchor_embedding - pred_embeddings), dim=1)
 
-    # ic(d1)
-    TP = (d1 < threshold) & (target == 1)
-    TN = (d1 >= threshold) & (target == 0)
-    FP = (d1 < threshold) & (target == 0)
-    FN = (d1 >= threshold) & (target == 1)
+    TP = (d1 < threshold) & (targets == 1)
+    TN = (d1 >= threshold) & (targets == 0)
+    FP = (d1 < threshold) & (targets == 0)
+    FN = (d1 >= threshold) & (targets == 1)
     
     count_TP = TP.sum()
     count_TN = TN.sum()

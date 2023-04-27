@@ -21,9 +21,10 @@ class SiameseDataset(torch.utils.data.Dataset):
 
         self.isNormalize_bool = isNormalize_bool
         self.isAugment_bool = isAugment_bool
+        self.isValSet_bool = isValSet_bool
         self.ratio = ratio
 
-        if isValSet_bool:
+        if self.isValSet_bool:
             self.imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.3)) 
             self.imgset_self = rd.sample(imgset_self, int(len_self*0.3))
         else :
@@ -82,15 +83,28 @@ class SiameseDataset(torch.utils.data.Dataset):
                 img_path = self.imgset_self[pos_idx]
                 label = self.label_self[pos_idx]
         else:
-            img_path = self.imgset[idx]
-            label = self.labelset[idx]
+            if self.isValSet_bool:
+                rd.seed(idx)
+            # img_path = self.imgset[idx]
+            # label = self.labelset[idx]
+            idx_pos = rd.randint(0, len(self.imgset_self)-1)
+            idx_neg = rd.randint(0, len(self.imgset_lfw)-1)
+            img_path_pos = self.imgset_self[idx_pos]
+            img_path_neg = self.imgset_lfw[idx_neg]
+            label_pos = self.label_self[idx_pos]
+            label_neg = self.label_lfw[idx_neg]
 
-        # img_path = self.imgset[idx]
-        img_PIL = PIL.Image.open(img_path).convert('RGB')
-        image = self._preprocess(img_PIL)
 
-        # label = self.labelset[idx]
-        return image, torch.tensor(label, dtype=torch.int32)
+        # img_PIL = PIL.Image.open(img_path).convert('RGB')
+        # image = self._preprocess(img_PIL)
+
+        img_PIL_pos = PIL.Image.open(img_path_pos).convert('RGB')
+        img_PIL_neg = PIL.Image.open(img_path_neg).convert('RGB')
+        image_pos = self._preprocess(img_PIL_pos)
+        image_neg = self._preprocess(img_PIL_neg)
+
+        # return image, torch.tensor(label, dtype=torch.int32)
+        return image_pos, image_neg, torch.tensor(label_pos).to(torch.int32), torch.tensor(label_neg).to(torch.int32)
 
 
 def get_training_dataset(BATCH_SIZE=16, **kwargs):
@@ -101,17 +115,17 @@ def get_training_dataset(BATCH_SIZE=16, **kwargs):
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
     return dataloader
 
-def get_validation_dataset(BATCH_SIZE=None, **kwargs):
+def get_validation_dataset(BATCH_SIZE=0, **kwargs):
     """
     Loads and maps the validation split of the datasetusing the custom dataset class. 
     """
     dataset = SiameseDataset(isValSet_bool=True, **kwargs)
-    if BATCH_SIZE is None:
+    if not BATCH_SIZE:
         BATCH_SIZE = len(dataset)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
     return dataloader
 
 
 if __name__ == "__main__":
-    dataset = get_training_dataset(ratio=6, isAugment_bool=True, isNormalize_bool=False)
-    print(next(iter(dataset))[1])
+    dataset = get_validation_dataset(ratio=0, isAugment_bool=True, isNormalize_bool=False)
+    print(next(iter(dataset))[1].shape)

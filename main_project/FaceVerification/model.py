@@ -9,38 +9,60 @@ from torchinfo import summary
 from icecream import ic
 
 class SiameseNet(nn.Module):
-    def __init__(self, pretrained='vggface2'):
+    def __init__(self, pretrained):
         """Custom the FaceNet InceptionResnetV1 model.
         """
         super(SiameseNet, self).__init__()
         count=0
-        # self.FaceNetModif_seq1 = nn.Sequential(*list(InceptionResnetV1(pretrained=pretrained).children())[:-3])
-        self.FaceNetModif_seq1 = InceptionResnetV1(pretrained=pretrained)
-        for param in self.FaceNetModif_seq1.parameters():
+        print(type(pretrained))
+        assert pretrained in ['None', 'vggface2', 'casia-webface']
+        pretrained = None if pretrained == 'None' else pretrained
+        self.model = InceptionResnetV1(pretrained=pretrained)
+
+        # if pretrained is not None:
+        #     for param in self.model.parameters():
+        #         param.requires_grad = False
+        #         # if count == 376:
+        #         if count == 377:
+        #             break
+        #         count += 1
+
+        # if pretrained == 'None':
+        #     self.model = torch.nn.Sequential(*list(InceptionResnetV1(pretrained=None).children())[:-2])
+        # else: 
+        #     self.model = torch.nn.Sequential(*list(InceptionResnetV1(pretrained=pretrained).children())[:-3])
+
+        for param in self.model.parameters():
             param.requires_grad = False
-            if count == 376:
-                break
-            count += 1
-        # print(count)
-        # self.FaceNetModif_seq2 = nn.Sequential(
-        #     nn.Flatten(),
-        #     nn.Linear(1792, 128, bias=True),
-        #     nn.BatchNorm1d(128, eps=0.001, momentum=0.1, affine=True)
-        # )
-    def forward(self, x:torch.Tensor)->torch.Tensor:
+
+        self.model.avgpool_1a.requires_grad_()
+        self.model.dropout.requires_grad_()
+        self.model.last_linear.requires_grad_()
+
+        # self.model[-3].requires_grad_()
+        # self.model[-2].requires_grad_()
+        # self.model[-1].requires_grad_()
+
+        # self.add_head = torch.nn.Sequential(
+        #     torch.nn.Linear(in_features=1792, out_features=512, bias=False),
+        #     torch.nn.LayerNorm(512)
+        #     )
+
+    def forward(self, input:torch.Tensor)->torch.Tensor:
         """Forward method of the model.
 
         -------------------
         Parameters:
-            x: torch.Tensor of shape (batch_size, channels, height, width)
+            input: torch.Tensor of shape (batch_size, channels, height, width)
                 Batch of the tensor images
         -------------------
         Returns:
             x: torch.Tensor of shape (batch_size, 128)
                 Batch of embeddings as the predictions of the model
         """
-        x = self.FaceNetModif_seq1(x)
-        # x = self.FaceNetModif_seq2(x)
+        x = self.model(input)
+        # ic(x.shape)
+        # x = self.add_head(torch.nn.Flatten()(x))
         return x
 
 
@@ -61,6 +83,9 @@ def siameseNet(load_weights=False, **kwargs) -> SiameseNet:
     
 
 if __name__ == "__main__":
-    model = siameseNet()
+    model = siameseNet(pretrained="vggface2")
+    dummy = torch.rand(32, 3, 160, 160)
+    output = model(dummy)
+    print(output.shape)
     summary(model, (16, 3, 160, 160))
     
