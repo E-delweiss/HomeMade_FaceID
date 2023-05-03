@@ -29,7 +29,7 @@ def scatter(x, labels, root='plot', subtitle=None):
     ## ---------------------------- ##
     
     ## Add label on top of each cluster ##
-    idx2name = ['1', '0', '2']
+    idx2name = ['0', '1', '2']
         
     txts = []
     for i in range(num_classes):

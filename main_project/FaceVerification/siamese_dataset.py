@@ -12,28 +12,27 @@ import torchvision
 
 class SiameseDataset(torch.utils.data.Dataset):
     def __init__(self, ratio:int, isValSet_bool:bool=None, isAugment_bool:bool=False, isNormalize_bool:bool=False)->tuple: 
-        imgset_self = glob.glob('../../dataset/dataset_moi_mbp_cropped/*')
-        imgset_lfw = glob.glob('../../dataset/lfw/lfw_funneled/*/*')
-        len_self = len(imgset_self)
-        len_lfw = len(imgset_lfw)
+        if isValSet_bool:
+            self.imgset_self = glob.glob('../../dataset/new_img_MBA_2023/val_set/moi/*')
+            self.imgset_noself = glob.glob('../../dataset/new_img_MBA_2023/val_set/pasmoi/*')
+        else :
+            self.imgset_self = glob.glob('../../dataset/new_img_MBA_2023/train_set/moi/*')
+            self.imgset_noself = glob.glob('../../dataset/new_img_MBA_2023/train_set/pasmoi/*')
+        
+        
+        len_self = len(self.imgset_self)
+        len_noself = len(self.imgset_noself)
 
         self.isNormalize_bool = isNormalize_bool
         self.isAugment_bool = isAugment_bool
         self.isValSet_bool = isValSet_bool
         self.ratio = ratio
 
-        if self.isValSet_bool:
-            self.imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.3)) 
-            self.imgset_self = rd.sample(imgset_self, int(len_self*0.3))
-        else :
-            self.imgset_lfw = rd.sample(imgset_lfw, int(len_lfw*0.7)) 
-            self.imgset_self = rd.sample(imgset_self, int(len_self*0.7))
-
-        self.label_lfw = np.zeros(len(self.imgset_lfw)).tolist()
-        self.label_self = np.ones(len(self.imgset_self)).tolist()
+        self.label_self = np.ones(len_self).tolist()
+        self.label_noself = np.zeros(len_noself).tolist()
         
-        self.labelset = self.label_lfw + self.label_self
-        self.imgset = self.imgset_lfw + self.imgset_self
+        self.labelset = self.label_noself + self.label_self
+        self.imgset = self.imgset_noself + self.imgset_self
 
 
     def _preprocess(self, img_PIL:torch.Tensor)->torch.Tensor:
@@ -46,7 +45,7 @@ class SiameseDataset(torch.utils.data.Dataset):
 
         ### Normalize data
         if self.isNormalize_bool:
-            mean, std = (0.4236, 0.3698, 0.3317), (0.2988, 0.2733, 0.2654)
+            mean, std = (0.5494, 0.4396, 0.4001), (0.2402, 0.1993, 0.2171)
             img_t = torchvision.transforms.Normalize(mean, std)(img_t)
 
         ### Data augmentation
@@ -76,9 +75,9 @@ class SiameseDataset(torch.utils.data.Dataset):
 
             if idx % (self.ratio + 1):
                 neg_idx = idx - 1 - pos_idx
-                neg_idx = neg_idx % len(self.imgset_lfw)
-                img_path = self.imgset_lfw[neg_idx]
-                label = self.label_lfw[neg_idx]
+                neg_idx = neg_idx % len(self.imgset_noself)
+                img_path = self.imgset_noself[neg_idx]
+                label = self.label_noself[neg_idx]
             else:
                 pos_idx = pos_idx % len(self.imgset_self)
                 img_path = self.imgset_self[pos_idx]

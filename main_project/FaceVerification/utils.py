@@ -165,8 +165,8 @@ def mean_std_normalization()->tuple:
     Get the mean and std of the dataset RGB channels.
     Note:
         mean/std of the train dataset (after /255) :
-            Mean :  tensor([0.3510, 0.3846, 0.4988])
-            Std :  tensor([0.2214, 0.2394, 0.2772])
+        Mean :  tensor([0.5494, 0.4396, 0.4001])
+        Std :  tensor([0.2402, 0.1993, 0.2171])
 
     Returns:
         mean : torch.Tensor
@@ -174,10 +174,11 @@ def mean_std_normalization()->tuple:
     """
     # imgset_self = glob.glob('../dataset/dataset_moi_mbp_cropped/*')
     # imgset_lfw = glob.glob('../dataset/lfw/lfw_funneled/*/*')
-    imgset_self = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_moi_sven_cropped/train/*')
-    imgset_lfw = glob.glob('/Users/thierryksstentini/Downloads/dataset/dataset_sven/dataset_pauline_sven_cropped/train/*')
+    imgset_self = glob.glob("../../dataset/new_img_MBA_2023/train_set/moi/*")
+    imgset_noself = glob.glob("../../dataset/new_img_MBA_2023/train_set/pasmoi/*")
+    print(f"LEN : {len(imgset_self)} & {len(imgset_noself)}")
 
-    data_jpg = imgset_self + imgset_lfw
+    data_jpg = imgset_self + imgset_noself
     data_PIL = [PIL.Image.open(img_path).convert('RGB') for img_path in data_jpg]
     data_tensor = [torchvision.transforms.ToTensor()(img_PIL) for img_PIL in data_PIL]
 
@@ -192,8 +193,8 @@ def mean_std_normalization()->tuple:
     return mean, std
 
 def unormalization(img_tensor:torch.Tensor):
-    mean_ch1, mean_ch2, mean_ch3 = 0.3510, 0.3846, 0.4988
-    std_ch1, std_ch2, std_ch3 = 0.2214, 0.2394, 0.2772
+    mean_ch1, mean_ch2, mean_ch3 = 0.5494, 0.4396, 0.4001
+    std_ch1, std_ch2, std_ch3 = 0.2402, 0.1993, 0.2171
     inv_normalize = torchvision.transforms.Normalize(
         mean=[-mean_ch1/std_ch1, -mean_ch2/std_ch2, -mean_ch3/std_ch3],
         std=[1/std_ch1, 1/std_ch2, 1/std_ch3]
